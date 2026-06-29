@@ -38,6 +38,16 @@ Covers single responsibility, dependency injection, pure functions, and other pr
 - `design-pure-functions` - Prefer pure functions without side effects
 - `design-early-return` - Reduce nesting with early returns
 
+## Documentation (doc)
+**Impact:** HIGH
+
+Documentation standards for public API clarity and machine-checkable contracts.
+Covers docstrings, type annotations, and API documentation practices that help humans, tools, and AI agents understand code behavior.
+
+**Rules:**
+- `doc-docstring` - Document public APIs with Google style docstrings
+- `doc-type-hints` - Require type hints for public APIs
+
 ## Object-Oriented Programming (oop)
 **Impact:** MEDIUM
 
