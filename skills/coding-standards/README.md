@@ -4,13 +4,14 @@ A comprehensive collection of Python coding standards and best practices, design
 
 ## Overview
 
-This skill provides 18 rules across 4 categories:
+This skill provides 20 rules across 5 categories:
 
 | Category | Prefix | Impact | Rules |
 |----------|--------|--------|-------|
 | Performance Optimization | `perf-` | CRITICAL | 5 |
 | Async Processing | `async-` | HIGH | 4 |
 | Design Principles | `design-` | HIGH | 5 |
+| Documentation | `doc-` | HIGH | 2 |
 | Object-Oriented Programming | `oop-` | MEDIUM | 4 |
 
 ## Structure
@@ -26,6 +27,7 @@ skills/coding-standards/
     ├── perf-*.md         # Performance rules
     ├── async-*.md        # Async processing rules
     ├── design-*.md       # Design principles rules
+    ├── doc-*.md          # Documentation rules
     └── oop-*.md          # OOP rules
 ```
 
@@ -51,6 +53,10 @@ skills/coding-standards/
 - `design-pure-functions` - Prefer pure functions without side effects
 - `design-early-return` - Reduce nesting with early returns
 
+### Documentation (HIGH)
+- `doc-docstring` - Document public APIs with Google style docstrings
+- `doc-type-hints` - Require type hints for public APIs
+
 ### Object-Oriented Programming (MEDIUM)
 - `oop-composition-over-inheritance` - Prefer composition over inheritance
 - `oop-dataclass` - Use dataclass for data containers
@@ -75,6 +81,6 @@ Each rule follows a consistent format:
 
 To add a new rule:
 1. Copy `rules/_template.md`
-2. Use the appropriate prefix (`perf-`, `async-`, `design-`, `oop-`)
+2. Use the appropriate prefix (`perf-`, `async-`, `design-`, `doc-`, `oop-`)
 3. Follow the existing format
 4. Update `_sections.md` and `SKILL.md`

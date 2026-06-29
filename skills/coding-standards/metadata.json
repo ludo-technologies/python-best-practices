@@ -2,8 +2,8 @@
   "version": "1.0.0",
   "author": "Python Best Practices",
   "abstract": "Python coding standards and best practices. Designed for AI agents and LLMs to generate high-quality Python code.",
-  "categories": 4,
-  "rules": 18,
+  "categories": 5,
+  "rules": 20,
   "sections": [
     {
       "prefix": "perf",
@@ -22,6 +22,12 @@
       "name": "Design Principles",
       "impact": "HIGH",
       "count": 5
+    },
+    {
+      "prefix": "doc",
+      "name": "Documentation",
+      "impact": "HIGH",
+      "count": 2
     },
     {
       "prefix": "oop",

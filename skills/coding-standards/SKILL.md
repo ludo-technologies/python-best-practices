@@ -46,6 +46,14 @@ Software design principles for maintainability and extensibility.
 | [design-pure-functions](rules/design-pure-functions.md) | Prefer pure functions without side effects |
 | [design-early-return](rules/design-early-return.md) | Reduce nesting with early returns |
 
+### Documentation [HIGH]
+Documentation standards for public API clarity and machine-checkable contracts.
+
+| Rule | Description |
+|------|-------------|
+| [doc-docstring](rules/doc-docstring.md) | Document public APIs with Google style docstrings |
+| [doc-type-hints](rules/doc-type-hints.md) | Require type hints for public APIs |
+
 ### Object-Oriented Programming [MEDIUM]
 Best practices for Pythonic object-oriented programming.
 
@@ -105,6 +113,21 @@ def process(data: Data | None) -> Result:
     if data is None:
         return Result.empty()
     # main logic here
+```
+
+### Documentation Patterns
+```python
+def create_user(email: str, name: str) -> User:
+    """Create a user account.
+
+    Args:
+        email: Unique email address for the account.
+        name: Display name for the user.
+
+    Returns:
+        The created user.
+    """
+    return user_repository.create(email=email, name=name)
 ```
 
 ### OOP Patterns
