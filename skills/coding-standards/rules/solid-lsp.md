@@ -63,4 +63,4 @@ relocate([FlyingBird(), Penguin()])
 
 ## References
 - [SOLID - Liskov Substitution Principle](https://en.wikipedia.org/wiki/Liskov_substitution_principle)
-- [Liskov Substitution Principle (Robert C. Martin)](https://blog.cleancoder.com/uncle-bob/2014/05/12/TheOpenClosedPrinciple.html)
+- [Liskov Substitution Principle (Robert C. Martin)](https://objectmentor.com/resources/articles/lsp.pdf)
