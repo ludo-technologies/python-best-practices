@@ -43,6 +43,9 @@ Software design principles for maintainability and extensibility.
 | [design-philosophy](rules/design-philosophy.md) | DRY, YAGNI, KISS principles |
 | [design-single-responsibility](rules/design-single-responsibility.md) | Single Responsibility Principle |
 | [design-dependency-injection](rules/design-dependency-injection.md) | Loose coupling with dependency injection |
+| [solid-ocp](rules/solid-ocp.md) | Open/Closed Principle |
+| [solid-lsp](rules/solid-lsp.md) | Liskov Substitution Principle |
+| [solid-isp](rules/solid-isp.md) | Interface Segregation Principle |
 | [design-pure-functions](rules/design-pure-functions.md) | Prefer pure functions without side effects |
 | [design-early-return](rules/design-early-return.md) | Reduce nesting with early returns |
 
@@ -107,6 +110,14 @@ async with semaphore:
 class Service:
     def __init__(self, repository: Repository) -> None:
         self.repository = repository
+
+# Open/Closed: extend via new types, not edits
+class JsonFormat:
+    def export(self, invoice: Invoice) -> str: ...
+
+# Interface Segregation: small Protocols
+class Workable(Protocol):
+    def work(self) -> None: ...
 
 # Early return
 def process(data: Data | None) -> Result:

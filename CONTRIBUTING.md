@@ -30,7 +30,7 @@ skills/
 
 | Skill | Categories |
 |-------|-----------|
-| coding-standards | `perf-`, `async-`, `design-`, `oop-` |
+| coding-standards | `perf-`, `async-`, `design-`, `solid-`, `doc-`, `oop-` |
 | tooling | `analysis-`, `lint-`, `type-`, `fmt-`, `test-`, `pkg-` |
 
 ### 2. Create the rule file
