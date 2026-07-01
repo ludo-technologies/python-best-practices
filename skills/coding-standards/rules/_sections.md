@@ -29,12 +29,15 @@ Covers concurrent execution of I/O-bound operations, resource management, and co
 **Impact:** HIGH
 
 Software design principles for maintainability and extensibility.
-Covers single responsibility, dependency injection, pure functions, and other principles for building robust codebases.
+Covers SOLID principles, dependency injection, pure functions, and other principles for building robust codebases.
 
 **Rules:**
 - `design-philosophy` - DRY, YAGNI, KISS principles
 - `design-single-responsibility` - Single Responsibility Principle
 - `design-dependency-injection` - Loose coupling with dependency injection
+- `solid-ocp` - Open/Closed Principle
+- `solid-lsp` - Liskov Substitution Principle
+- `solid-isp` - Interface Segregation Principle
 - `design-pure-functions` - Prefer pure functions without side effects
 - `design-early-return` - Reduce nesting with early returns
 
