@@ -1,7 +1,7 @@
 ---
 name: coding-standards
-description: Python coding standards and best practices for AI coding agents
-globs:
+description: Python coding standards and best practices covering performance optimization, async patterns, SOLID design principles, documentation, and object-oriented programming. Use when writing, reviewing, or refactoring Python code, or when the user asks about Python style, design, or best practices.
+paths:
   - "**/*.py"
   - "pyproject.toml"
   - "setup.py"

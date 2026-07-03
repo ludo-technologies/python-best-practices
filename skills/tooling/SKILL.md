@@ -1,7 +1,7 @@
 ---
 name: tooling
-description: Python development tooling configuration and best practices
-globs:
+description: Python development tooling configuration and best practices for ruff, mypy, pytest, pyscn, and uv. Use when setting up a Python project, configuring linters, formatters, type checkers, or test frameworks, or when editing pyproject.toml or tool config files.
+paths:
   - "**/*.py"
   - "pyproject.toml"
   - "mypy.ini"
