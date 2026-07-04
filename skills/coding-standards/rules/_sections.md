@@ -51,6 +51,15 @@ Covers docstrings, type annotations, and API documentation practices that help h
 - `doc-docstring` - Document public APIs with Google style docstrings
 - `doc-type-hints` - Require type hints for public APIs
 
+## Data Validation (validation)
+**Impact:** HIGH
+
+Validation patterns for data crossing trust boundaries.
+Covers schema-based validation, coercion, and clear error handling for external input.
+
+**Rules:**
+- `validation-pydantic` - Use Pydantic for boundary data validation
+
 ## Object-Oriented Programming (oop)
 **Impact:** MEDIUM
 

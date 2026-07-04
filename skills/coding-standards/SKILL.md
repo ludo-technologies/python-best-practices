@@ -1,6 +1,6 @@
 ---
 name: coding-standards
-description: Python coding standards and best practices covering performance optimization, async patterns, SOLID design principles, documentation, and object-oriented programming. Use when writing, reviewing, or refactoring Python code, or when the user asks about Python style, design, or best practices.
+description: Python coding standards and best practices covering performance optimization, async patterns, SOLID design principles, documentation, data validation, and object-oriented programming. Use when writing, reviewing, or refactoring Python code, or when the user asks about Python style, design, or best practices.
 paths:
   - "**/*.py"
   - "pyproject.toml"
@@ -56,6 +56,13 @@ Documentation standards for public API clarity and machine-checkable contracts.
 |------|-------------|
 | [doc-docstring](rules/doc-docstring.md) | Document public APIs with Google style docstrings |
 | [doc-type-hints](rules/doc-type-hints.md) | Require type hints for public APIs |
+
+### Data Validation [HIGH]
+Validation patterns for data crossing trust boundaries.
+
+| Rule | Description |
+|------|-------------|
+| [validation-pydantic](rules/validation-pydantic.md) | Use Pydantic for boundary data validation |
 
 ### Object-Oriented Programming [MEDIUM]
 Best practices for Pythonic object-oriented programming.
@@ -139,6 +146,15 @@ def create_user(email: str, name: str) -> User:
         The created user.
     """
     return user_repository.create(email=email, name=name)
+```
+
+### Validation Patterns
+```python
+from pydantic import BaseModel, EmailStr, Field
+
+class CreateUserRequest(BaseModel):
+    email: EmailStr
+    age: int = Field(ge=0, le=150)
 ```
 
 ### OOP Patterns

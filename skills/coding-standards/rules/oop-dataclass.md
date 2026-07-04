@@ -76,7 +76,8 @@ class Coordinate:
 - Use `frozen=True` for immutable objects: it makes instances read-only and auto-generates `__hash__`, so they work as dict keys and set members without writing `__hash__` by hand.
 - Use `slots=True` (passing `slots=True` to `@dataclass` is Python 3.10+) for memory efficiency with many instances
 - Use `Decimal`, not `float`, for money fields like `discount`/`price` to avoid rounding errors
-- Consider `attrs` library for more features or `pydantic` for validation
+- Use `@dataclass` for internal data structures; use Pydantic at trust boundaries (see `validation-pydantic`)
+- Consider `attrs` for more features beyond what dataclasses provide
 
 ## References
 - [Python Docs - dataclasses](https://docs.python.org/3/library/dataclasses.html)
