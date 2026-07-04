@@ -35,6 +35,17 @@ Python development tooling configuration. 7 rules across 6 categories.
 | **Testing** | HIGH | pytest |
 | **Package Management** | MEDIUM | uv, pyproject.toml |
 
+### testing
+
+Python test-writing best practices with pytest. 12 rules across 4 categories.
+
+| Category | Impact | Rules |
+|----------|--------|-------|
+| **Mocking** | CRITICAL | mock boundaries only, autospec, monkeypatch |
+| **Test Structure** | HIGH | Arrange-Act-Assert, behavior-based naming, one behavior per test, no logic in tests |
+| **Fixtures** | HIGH | narrowest scope, conftest placement, factory fixtures |
+| **Parametrization** | MEDIUM | parametrize, readable ids |
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on adding new rules.

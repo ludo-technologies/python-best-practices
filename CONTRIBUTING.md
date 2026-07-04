@@ -18,7 +18,11 @@ skills/
 │   └── rules/
 │       ├── _template.md       # Rule template
 │       └── {prefix}-{name}.md # Individual rules
-└── tooling/                   # Development tool configuration
+├── tooling/                   # Development tool configuration
+│   ├── SKILL.md
+│   ├── metadata.json
+│   └── rules/
+└── testing/                   # Test-writing best practices
     ├── SKILL.md
     ├── metadata.json
     └── rules/
@@ -32,6 +36,7 @@ skills/
 |-------|-----------|
 | coding-standards | `perf-`, `async-`, `design-`, `solid-`, `doc-`, `oop-` |
 | tooling | `analysis-`, `lint-`, `type-`, `fmt-`, `test-`, `pkg-` |
+| testing | `struct-`, `fixture-`, `param-`, `mock-` |
 
 ### 2. Create the rule file
 
@@ -76,9 +81,9 @@ Why this rule matters and when to apply it.
 - [Link](URL)
 ```
 
-### 4. Update SKILL.md
+### 4. Update SKILL.md and _sections.md
 
-Add your rule to the appropriate category table in `skills/{skill}/SKILL.md`.
+Add your rule to the appropriate category table in `skills/{skill}/SKILL.md` and to its section in `skills/{skill}/rules/_sections.md`.
 
 ### 5. Update metadata.json
 
