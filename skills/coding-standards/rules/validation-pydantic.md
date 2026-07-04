@@ -42,10 +42,10 @@ class CreateUserRequest(BaseModel):
     age: int = Field(ge=0, le=150)
     name: str = Field(min_length=1, max_length=100)
 
-    @field_validator("name")
+    @field_validator("name", mode="before")
     @classmethod
-    def strip_name(cls, value: str) -> str:
-        return value.strip()
+    def strip_name(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
 
 
 @app.post("/users")
@@ -72,6 +72,7 @@ class Settings(BaseSettings):
 - Validate once at the boundary, then pass typed objects inward—do not re-validate the same fields in every service method.
 - Prefer `model_validate()` / `model_validate_json()` over manual dict unpacking so coercion and constraints run consistently.
 - Use `Field()` constraints (`ge`, `le`, `pattern`, `min_length`) instead of hand-written `if` checks.
+- `field_validator` defaults to `mode="after"`, so `Field()` constraints run first. Use `mode="before"` when normalizing input (e.g., stripping whitespace) must happen before length or pattern checks.
 - For FastAPI, declare Pydantic models as route parameters or `response_model` to get automatic validation and OpenAPI schemas.
 - Keep Pydantic models thin: validation and serialization only. Move business rules to domain functions or services.
 
