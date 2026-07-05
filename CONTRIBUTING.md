@@ -34,7 +34,7 @@ skills/
 
 | Skill | Categories |
 |-------|-----------|
-| coding-standards | `perf-`, `async-`, `design-`, `solid-`, `doc-`, `oop-` |
+| coding-standards | `perf-`, `async-`, `design-`, `solid-`, `doc-`, `validation-`, `oop-` |
 | tooling | `analysis-`, `lint-`, `type-`, `fmt-`, `test-`, `pkg-` |
 | testing | `struct-`, `fixture-`, `param-`, `mock-` |
 

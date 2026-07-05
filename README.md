@@ -12,7 +12,7 @@ uvx add-skills ludo-technologies/python-best-practices
 
 ### coding-standards
 
-Python coding standards and best practices. 23 rules across 5 categories.
+Python coding standards and best practices. 24 rules across 6 categories.
 
 | Category | Impact | Rules |
 |----------|--------|-------|
@@ -20,6 +20,7 @@ Python coding standards and best practices. 23 rules across 5 categories.
 | **Async Processing** | HIGH | asyncio.gather, create_task, async context manager, semaphore |
 | **Design Principles** | HIGH | DRY/YAGNI/KISS, single responsibility, dependency injection, OCP, LSP, ISP, pure functions, early return |
 | **Documentation** | HIGH | Google style docstrings, type hints for public APIs |
+| **Data Validation** | HIGH | Pydantic for boundary data validation |
 | **Object-Oriented Programming** | MEDIUM | composition over inheritance, dataclass, Protocol, property |
 
 ### tooling
