@@ -89,6 +89,19 @@ try:
     config = parse_config(path)
 except ConfigParseError as exc:
     raise StartupError(f"Invalid configuration: {path}") from exc
+
+
+def main() -> int:
+    try:
+        start_application()
+    except StartupError:
+        logger.exception("Application startup failed")
+        return 1  # explicit non-success outcome at the process boundary
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
 ```
 
 ### Performance Patterns

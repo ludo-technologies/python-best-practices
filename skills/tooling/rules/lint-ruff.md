@@ -36,6 +36,7 @@ select = [
     "PTH",    # flake8-use-pathlib
     "RUF",    # Ruff-specific rules
     "S110",   # Disallow try/except/pass
+    "S112",   # Disallow try/except/continue
 ]
 ignore = []
 
@@ -108,10 +109,11 @@ ruff check . --statistics       # Show rule counts
 | PTH | flake8-use-pathlib | Path handling |
 | RUF | Ruff | Ruff-specific |
 | S110 | flake8-bandit | Silent try/except/pass |
+| S112 | flake8-bandit | Silent try/except/continue |
 
 ## Notes
 - Always specify `target-version` to match your project's minimum Python
-- Enable `BLE001` and `S110`, with `check-typed-exception = true`, to detect broad and empty exception handlers
+- Enable `BLE001`, `S110`, and `S112`, with `check-typed-exception = true`, to detect broad handlers and silent `pass` or `continue`
 - Ruff permits broad handlers that call `logging.exception`; review them to ensure they are explicit application boundaries rather than swallowed failures
 - Use `--fix` for safe auto-fixes, review `--unsafe-fixes` before applying
 - Start with recommended rules, add more as codebase matures

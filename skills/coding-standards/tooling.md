@@ -37,7 +37,7 @@ target-version = "py311"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B", "BLE", "SIM", "PTH", "S110"]
+select = ["E", "F", "W", "I", "UP", "B", "BLE", "SIM", "PTH", "S110", "S112"]
 
 [tool.ruff.lint.flake8-bandit]
 check-typed-exception = true
