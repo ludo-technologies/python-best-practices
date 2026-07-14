@@ -31,11 +31,17 @@ select = [
     "I",      # isort
     "UP",     # pyupgrade
     "B",      # flake8-bugbear
+    "BLE",    # flake8-blind-except
     "SIM",    # flake8-simplify
     "PTH",    # flake8-use-pathlib
     "RUF",    # Ruff-specific rules
+    "S110",   # Disallow try/except/pass
+    "S112",   # Disallow try/except/continue
 ]
 ignore = []
+
+[tool.ruff.lint.flake8-bandit]
+check-typed-exception = true
 
 # For mature projects, consider adding:
 # "C4"   - flake8-comprehensions
@@ -98,12 +104,17 @@ ruff check . --statistics       # Show rule counts
 | I | isort | Import sorting |
 | UP | pyupgrade | Modernize syntax |
 | B | flake8-bugbear | Bug patterns |
+| BLE | flake8-blind-except | Broad exception handlers |
 | SIM | flake8-simplify | Simplifications |
 | PTH | flake8-use-pathlib | Path handling |
 | RUF | Ruff | Ruff-specific |
+| S110 | flake8-bandit | Silent try/except/pass |
+| S112 | flake8-bandit | Silent try/except/continue |
 
 ## Notes
 - Always specify `target-version` to match your project's minimum Python
+- Enable `BLE001`, `S110`, and `S112`, with `check-typed-exception = true`, to detect broad handlers and silent `pass` or `continue`
+- Ruff permits broad handlers that call `logging.exception`; review them to ensure they are explicit application boundaries rather than swallowed failures
 - Use `--fix` for safe auto-fixes, review `--unsafe-fixes` before applying
 - Start with recommended rules, add more as codebase matures
 - Use `per-file-ignores` instead of global `ignore` when possible

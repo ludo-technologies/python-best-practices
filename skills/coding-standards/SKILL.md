@@ -1,6 +1,6 @@
 ---
 name: coding-standards
-description: Python coding standards and best practices covering performance optimization, async patterns, SOLID design principles, documentation, data validation, and object-oriented programming. Use when writing, reviewing, or refactoring Python code, or when the user asks about Python style, design, or best practices.
+description: Python coding standards and best practices covering error handling, performance optimization, async patterns, SOLID design principles, documentation, data validation, and object-oriented programming. Use when writing, reviewing, or refactoring Python code, or when the user asks about Python style, design, or best practices.
 paths:
   - "**/*.py"
   - "pyproject.toml"
@@ -13,6 +13,13 @@ paths:
 A comprehensive collection of Python coding standards and best practices. Designed for AI agents and LLMs to generate high-quality, performant, and maintainable Python code.
 
 ## Categories
+
+### Error Handling [CRITICAL]
+Prevent failures from being hidden or reported as successful outcomes.
+
+| Rule | Description |
+|------|-------------|
+| [error-no-silent-exceptions](rules/error-no-silent-exceptions.md) | Never swallow exceptions |
 
 ### Performance Optimization [CRITICAL]
 Apply Python optimization patterns to improve processing speed and memory efficiency.
@@ -75,6 +82,27 @@ Best practices for Pythonic object-oriented programming.
 | [oop-property](rules/oop-property.md) | Use property instead of getters |
 
 ## Quick Reference
+
+### Error Handling
+```python
+try:
+    config = parse_config(path)
+except ConfigParseError as exc:
+    raise StartupError(f"Invalid configuration: {path}") from exc
+
+
+def main() -> int:
+    try:
+        start_application()
+    except StartupError:
+        logger.exception("Application startup failed")
+        return 1  # explicit non-success outcome at the process boundary
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
 
 ### Performance Patterns
 ```python

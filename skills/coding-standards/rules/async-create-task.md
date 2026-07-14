@@ -42,10 +42,10 @@ def spawn_background_task(coro: Coroutine[Any, Any, None]) -> asyncio.Task[None]
 
 def _handle_background_task_result(task: asyncio.Task[None]) -> None:
     background_tasks.discard(task)  # release the strong reference
+    if task.cancelled():
+        return  # cancellation is already the task's defined terminal state
     try:
         task.result()  # retrieve exceptions so they are not silently logged later
-    except asyncio.CancelledError:
-        pass  # normal during shutdown
     except Exception:
         logger.exception("Background task failed")
 
@@ -55,10 +55,7 @@ async def main() -> None:
 
     # Or explicitly await the result when you need it
     task = asyncio.create_task(important_work())
-    try:
-        result = await task
-    except Exception as e:
-        logger.error(f"Task failed: {e}")
+    result = await task  # failures propagate to the caller
 
 # Python 3.11+ : TaskGroup for *structured* concurrency
 # Note: this blocks until all child tasks finish, so it is NOT fire-and-forget.
@@ -74,6 +71,7 @@ async def main_modern() -> None:
 ## Notes
 - Annotate the reference holder as `set[asyncio.Task[None]]` (builtin generic, Python 3.9+). Do **not** use `collections.abc.Set` for this—it is the immutable abstract type and does not expose `add()`/`discard()`.
 - `task.add_done_callback()` registers handlers for task completion; retrieve `task.result()` or `task.exception()` there so failures are reported deterministically.
+- A done callback is an explicit task-supervisor boundary: report unexpected failures there rather than silently discarding the result.
 - Use `asyncio.TaskGroup` (3.11+) for tasks the current scope should *wait for*; use the reference-holding pattern above for true fire-and-forget tasks that outlive the call.
 - Long-running background tasks should be cancellable via `task.cancel()`. Inside the task, let `asyncio.CancelledError` propagate—don't swallow it in a bare `except`.
 - Enable warnings during debug with `asyncio.get_running_loop().set_debug(True)`

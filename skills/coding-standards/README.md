@@ -4,10 +4,11 @@ A comprehensive collection of Python coding standards and best practices, design
 
 ## Overview
 
-This skill provides 24 rules across 6 categories:
+This skill provides 25 rules across 7 categories:
 
 | Category | Prefix | Impact | Rules |
 |----------|--------|--------|-------|
+| Error Handling | `error-` | CRITICAL | 1 |
 | Performance Optimization | `perf-` | CRITICAL | 5 |
 | Async Processing | `async-` | HIGH | 4 |
 | Design Principles | `design-`, `solid-` | HIGH | 8 |
@@ -25,6 +26,7 @@ skills/coding-standards/
 └── rules/
     ├── _sections.md      # Section definitions
     ├── _template.md      # Rule template
+    ├── error-*.md        # Error handling rules
     ├── perf-*.md         # Performance rules
     ├── async-*.md        # Async processing rules
     ├── design-*.md       # Design principles rules
@@ -35,6 +37,9 @@ skills/coding-standards/
 ```
 
 ## Rules
+
+### Error Handling (CRITICAL)
+- `error-no-silent-exceptions` - Never swallow exceptions
 
 ### Performance Optimization (CRITICAL)
 - `perf-list-comprehension` - Prefer list comprehensions over loops
@@ -90,6 +95,6 @@ Each rule follows a consistent format:
 
 To add a new rule:
 1. Copy `rules/_template.md`
-2. Use the appropriate prefix (`perf-`, `async-`, `design-`, `solid-`, `doc-`, `validation-`, `oop-`)
+2. Use the appropriate prefix (`error-`, `perf-`, `async-`, `design-`, `solid-`, `doc-`, `validation-`, `oop-`)
 3. Follow the existing format
 4. Update `_sections.md` and `SKILL.md`
