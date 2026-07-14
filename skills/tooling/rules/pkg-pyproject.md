@@ -67,7 +67,10 @@ target-version = "py311"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+select = ["E", "F", "W", "I", "UP", "B", "BLE", "SIM", "S110"]
+
+[tool.ruff.lint.flake8-bandit]
+check-typed-exception = true
 
 [tool.mypy]
 python_version = "3.11"

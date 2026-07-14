@@ -1,5 +1,14 @@
 # Section Definitions
 
+## Error Handling (error)
+**Impact:** CRITICAL
+
+Prevent failures from being hidden or reported as successful outcomes.
+Covers exception propagation, translation, recovery, and application-boundary handling.
+
+**Rules:**
+- `error-no-silent-exceptions` - Never swallow exceptions
+
 ## Performance Optimization (perf)
 **Impact:** CRITICAL
 

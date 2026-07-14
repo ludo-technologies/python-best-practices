@@ -2,9 +2,15 @@
   "version": "1.0.0",
   "author": "Python Best Practices",
   "abstract": "Python coding standards and best practices. Designed for AI agents and LLMs to generate high-quality Python code.",
-  "categories": 6,
-  "rules": 24,
+  "categories": 7,
+  "rules": 25,
   "sections": [
+    {
+      "prefix": "error",
+      "name": "Error Handling",
+      "impact": "CRITICAL",
+      "count": 1
+    },
     {
       "prefix": "perf",
       "name": "Performance Optimization",
