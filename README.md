@@ -5,7 +5,11 @@ Python best practices skill for AI coding agents. Provides structured guidelines
 ## Installation
 
 ```bash
+# Recommended
 uvx add-skills ludo-technologies/python-best-practices
+
+# Alternative (if you use pipx)
+pipx run add-skills ludo-technologies/python-best-practices
 ```
 
 ## Skills
