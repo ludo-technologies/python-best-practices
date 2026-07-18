@@ -16,7 +16,6 @@ This skill provides 26 rules across 7 categories:
 | Data Validation | `validation-` | HIGH | 1 |
 | Object-Oriented Programming | `oop-` | MEDIUM | 4 |
 
-
 ## Structure
 
 ```
@@ -65,7 +64,6 @@ skills/coding-standards/
 - `solid-isp` - Interface Segregation Principle
 - `design-pure-functions` - Prefer pure functions without side effects
 - `design-early-return` - Reduce nesting with early returns
-
 
 ### Documentation (HIGH)
 - `doc-docstring` - Document public APIs with Google style docstrings

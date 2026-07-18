@@ -24,7 +24,6 @@ Python coding standards and best practices. 26 rules across 7 categories.
 | **Performance Optimization** | CRITICAL | list comprehension, generator expression, dict.get(), set lookup, str.join() |
 | **Async Processing** | HIGH | asyncio.gather, create_task, async context manager, semaphore |
 | **Design Principles** | HIGH | DRY/YAGNI/KISS, single responsibility, dependency injection, no global singleton, OCP, LSP, ISP, pure functions, early return |
-
 | **Documentation** | HIGH | Google style docstrings, type hints for public APIs |
 | **Data Validation** | HIGH | Pydantic for boundary data validation |
 | **Object-Oriented Programming** | MEDIUM | composition over inheritance, dataclass, Protocol, property |

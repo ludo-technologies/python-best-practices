@@ -51,7 +51,6 @@ Covers SOLID principles, dependency injection, pure functions, and other princip
 - `design-pure-functions` - Prefer pure functions without side effects
 - `design-early-return` - Reduce nesting with early returns
 
-
 ## Documentation (doc)
 **Impact:** HIGH
 

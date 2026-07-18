@@ -57,7 +57,6 @@ Software design principles for maintainability and extensibility.
 | [design-pure-functions](rules/design-pure-functions.md) | Prefer pure functions without side effects |
 | [design-early-return](rules/design-early-return.md) | Reduce nesting with early returns |
 
-
 ### Documentation [HIGH]
 Documentation standards for public API clarity and machine-checkable contracts.
 
@@ -166,7 +165,6 @@ def process(data: Data | None) -> Result:
         return Result.empty()
     # main logic here
 ```
-
 
 ### Documentation Patterns
 ```python
