@@ -50,6 +50,7 @@ Software design principles for maintainability and extensibility.
 | [design-philosophy](rules/design-philosophy.md) | DRY, YAGNI, KISS principles |
 | [design-single-responsibility](rules/design-single-responsibility.md) | Single Responsibility Principle |
 | [design-dependency-injection](rules/design-dependency-injection.md) | Loose coupling with dependency injection |
+| [design-no-global-singleton](rules/design-no-global-singleton.md) | Avoid global singletons and module-level shared instances |
 | [solid-ocp](rules/solid-ocp.md) | Open/Closed Principle |
 | [solid-lsp](rules/solid-lsp.md) | Liskov Substitution Principle |
 | [solid-isp](rules/solid-isp.md) | Interface Segregation Principle |
@@ -141,10 +142,14 @@ async with semaphore:
 
 ### Design Patterns
 ```python
-# Dependency injection
+# Dependency injection (not module-level singletons)
 class Service:
     def __init__(self, repository: Repository) -> None:
         self.repository = repository
+
+# Composition root builds the graph once
+def create_app(settings: Settings) -> Service:
+    return Service(repository=PostgresRepository(settings.dsn))
 
 # Open/Closed: extend via new types, not edits
 class JsonFormat:

@@ -78,6 +78,8 @@ def test_order_processing() -> None:
 - Constructor injection is the most common and recommended approach
 - Consider using DI containers (e.g., `dependency-injector`) for complex applications
 - Factory functions can also serve as simple dependency injection
+- Do not replace constructor injection with module-level singletons or lazy `get_*()` globals; see [design-no-global-singleton](design-no-global-singleton.md)
 
 ## References
 - [Dependency Injection Principles](https://en.wikipedia.org/wiki/Dependency_injection)
+- [design-no-global-singleton](design-no-global-singleton.md)
