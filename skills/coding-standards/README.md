@@ -4,17 +4,18 @@ A comprehensive collection of Python coding standards and best practices, design
 
 ## Overview
 
-This skill provides 25 rules across 7 categories:
+This skill provides 26 rules across 7 categories:
 
 | Category | Prefix | Impact | Rules |
 |----------|--------|--------|-------|
 | Error Handling | `error-` | CRITICAL | 1 |
 | Performance Optimization | `perf-` | CRITICAL | 5 |
 | Async Processing | `async-` | HIGH | 4 |
-| Design Principles | `design-`, `solid-` | HIGH | 8 |
+| Design Principles | `design-`, `solid-` | HIGH | 9 |
 | Documentation | `doc-` | HIGH | 2 |
 | Data Validation | `validation-` | HIGH | 1 |
 | Object-Oriented Programming | `oop-` | MEDIUM | 4 |
+
 
 ## Structure
 
@@ -58,11 +59,13 @@ skills/coding-standards/
 - `design-philosophy` - DRY, YAGNI, KISS principles
 - `design-single-responsibility` - Single Responsibility Principle
 - `design-dependency-injection` - Loose coupling with dependency injection
+- `design-no-global-singleton` - Avoid global singletons and module-level shared instances
 - `solid-ocp` - Open/Closed Principle
 - `solid-lsp` - Liskov Substitution Principle
 - `solid-isp` - Interface Segregation Principle
 - `design-pure-functions` - Prefer pure functions without side effects
 - `design-early-return` - Reduce nesting with early returns
+
 
 ### Documentation (HIGH)
 - `doc-docstring` - Document public APIs with Google style docstrings

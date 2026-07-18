@@ -44,11 +44,13 @@ Covers SOLID principles, dependency injection, pure functions, and other princip
 - `design-philosophy` - DRY, YAGNI, KISS principles
 - `design-single-responsibility` - Single Responsibility Principle
 - `design-dependency-injection` - Loose coupling with dependency injection
+- `design-no-global-singleton` - Avoid global singletons and module-level shared instances
 - `solid-ocp` - Open/Closed Principle
 - `solid-lsp` - Liskov Substitution Principle
 - `solid-isp` - Interface Segregation Principle
 - `design-pure-functions` - Prefer pure functions without side effects
 - `design-early-return` - Reduce nesting with early returns
+
 
 ## Documentation (doc)
 **Impact:** HIGH
