@@ -52,6 +52,21 @@ Python test-writing best practices with pytest. 12 rules across 4 categories.
 | **Fixtures** | HIGH | narrowest scope, conftest placement, factory fixtures |
 | **Parametrization** | MEDIUM | parametrize, readable ids |
 
+### data-science
+
+NumPy and pandas best practices for data science and ML code. 13 rules across 8 categories.
+
+| Category | Impact | Rules |
+|----------|--------|-------|
+| **Vectorization** | CRITICAL | no Python loops / iterrows / row-wise apply, build arrays and frames once |
+| **Indexing & Mutation** | CRITICAL | .loc not chained indexing, no inplace=True |
+| **Data Types** | HIGH | explicit dtypes at load, category dtype, explicit NumPy dtypes |
+| **Schema Validation** | HIGH | pandera for DataFrame boundaries |
+| **Reproducibility** | HIGH | np.random.default_rng, no global seed |
+| **Transformation Style** | MEDIUM | method chaining with assign/pipe, named aggregation |
+| **Typing** | MEDIUM | numpy.typing.NDArray, pandas-stubs |
+| **Testing** | MEDIUM | assert_allclose, assert_frame_equal |
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on adding new rules.
