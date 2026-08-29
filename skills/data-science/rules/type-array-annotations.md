@@ -40,9 +40,9 @@ from .schemas import CustomerSchema
 def cosine_similarity(
     a: npt.NDArray[np.float64],
     b: npt.NDArray[np.float64],
-) -> np.float64:
+) -> float:
     """Cosine similarity of two 1-D vectors of equal length."""
-    return a @ b / (np.linalg.norm(a) * np.linalg.norm(b))
+    return float(a @ b / (np.linalg.norm(a) * np.linalg.norm(b)))
 
 
 def to_float32(values: npt.ArrayLike) -> npt.NDArray[np.float32]:
@@ -61,6 +61,7 @@ def load_matrix(path: str) -> npt.NDArray[np.float32]:
 
 ## Notes
 - `NDArray[np.float64]` is `np.ndarray[Any, np.dtype[np.float64]]`; the shape parameter is unchecked by mypy, so document expected shape in the docstring (`(n_samples, n_features)`).
+- Return plain `float`/`int` (via `float(...)`) for scalar results: NumPy's stubs infer `ndarray` for most reductions and operator chains, so annotating `-> np.float64` fails type checking and leaks NumPy scalars to callers.
 - Use `npt.ArrayLike` for parameters and `NDArray[...]` for return types: be liberal in what you accept, precise in what you return.
 - Install `pandas-stubs` as a dev dependency; without it most of pandas is `Any` to mypy.
 - Prefer `np.floating[Any]` / `np.integer[Any]` over concrete widths when a function genuinely works for any float or int dtype.

@@ -51,7 +51,7 @@ summary = df.groupby("region", as_index=False).agg(
 - `as_index=False` keeps the group keys as columns, avoiding a trailing `reset_index()`.
 - For per-row results aligned with the original frame (e.g., group mean broadcast back), use `groupby(...).transform("mean")` rather than merging the summary back in.
 - `pd.NamedAgg(column=..., aggfunc=...)` is the explicit form of the tuple if readability calls for it.
-- The same syntax works on `Series.groupby` and on `resample`/`rolling` objects.
+- `Series.groupby` has no source column to name, so the tuple form raises `TypeError`; use `agg(total="sum", orders="count")` there. The tuple form works on `DataFrame.groupby` and `DataFrame.resample`.
 
 ## References
 - [pandas User Guide - Named aggregation](https://pandas.pydata.org/docs/user_guide/groupby.html#named-aggregation)

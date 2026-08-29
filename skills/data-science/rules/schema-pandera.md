@@ -43,7 +43,6 @@ class OrderSchema(pa.DataFrameModel):
 
     class Config:
         strict = True   # no unexpected columns
-        coerce = True   # cast to declared dtypes
 
 
 def load_orders(path: str) -> DataFrame[OrderSchema]:
@@ -58,7 +57,8 @@ def revenue(df: DataFrame[OrderSchema]) -> float:
 
 ## Notes
 - Validate once at the boundary (load, API response, upstream pipeline stage), not inside every transformation. Use `DataFrame[Schema]` type hints to document which functions expect validated input.
-- `strict=True` catches renamed or extra columns; `coerce=True` turns dtype declaration into normalization, replacing ad-hoc `astype` calls.
+- `strict=True` catches renamed or extra columns.
+- Be careful with `coerce=True`: it casts *before* checking, so a `float` column with `1.9` passes a `Series[int]` schema as `1`. Leave coercion off for numeric columns (a wrong dtype is a real error) and enable it per column (`pa.Field(coerce=True)`) only where the cast is a lossless normalization, e.g. `str` to `category`.
 - Use `lazy=True` (`Schema.validate(df, lazy=True)`) in pipelines to collect all failures in one `SchemaErrors` report instead of stopping at the first.
 - Add cross-column rules with `@pa.dataframe_check` (e.g., `end_date >= start_date`) and custom column rules with `@pa.check("col")`.
 - A schema is also documentation: reviewers and agents can read the expected shape without opening a sample file.

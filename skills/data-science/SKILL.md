@@ -121,7 +121,6 @@ class OrderSchema(pa.DataFrameModel):
 
     class Config:
         strict = True
-        coerce = True
 
 
 def load_orders(path: str) -> DataFrame[OrderSchema]:
@@ -143,7 +142,10 @@ def add_noise(x: np.ndarray, rng: np.random.Generator) -> np.ndarray:
 ```python
 monthly = (
     pd.read_csv("sales.csv", parse_dates=["date"])
-    .assign(revenue=lambda d: d["price"] * d["qty"])
+    .assign(
+        revenue=lambda d: d["price"] * d["qty"],
+        month=lambda d: d["date"].dt.to_period("M"),
+    )
     .loc[lambda d: d["revenue"] > 0]
     .groupby("month", as_index=False)
     .agg(total_revenue=("revenue", "sum"), orders=("order_id", "count"))
