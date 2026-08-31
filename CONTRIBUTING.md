@@ -22,7 +22,11 @@ skills/
 │   ├── SKILL.md
 │   ├── metadata.json
 │   └── rules/
-└── testing/                   # Test-writing best practices
+├── testing/                   # Test-writing best practices
+│   ├── SKILL.md
+│   ├── metadata.json
+│   └── rules/
+└── data-science/              # NumPy and pandas best practices
     ├── SKILL.md
     ├── metadata.json
     └── rules/
@@ -37,6 +41,7 @@ skills/
 | coding-standards | `error-`, `perf-`, `async-`, `design-`, `solid-`, `doc-`, `validation-`, `oop-` |
 | tooling | `analysis-`, `lint-`, `type-`, `fmt-`, `test-`, `pkg-` |
 | testing | `struct-`, `fixture-`, `param-`, `mock-` |
+| data-science | `vec-`, `mut-`, `dtype-`, `schema-`, `repro-`, `style-`, `type-`, `test-` |
 
 ### 2. Create the rule file
 

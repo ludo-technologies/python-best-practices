@@ -1,0 +1,57 @@
+{
+  "version": "1.0.0",
+  "author": "Python Best Practices",
+  "abstract": "NumPy and pandas best practices for data science and ML code. Covers vectorization, DataFrame mutation under Copy-on-Write, dtypes, schema validation, reproducibility, transformation style, typing, and numeric testing.",
+  "categories": 8,
+  "rules": 13,
+  "sections": [
+    {
+      "prefix": "vec",
+      "name": "Vectorization",
+      "impact": "CRITICAL",
+      "count": 2
+    },
+    {
+      "prefix": "mut",
+      "name": "Indexing & Mutation",
+      "impact": "CRITICAL",
+      "count": 2
+    },
+    {
+      "prefix": "dtype",
+      "name": "Data Types",
+      "impact": "HIGH",
+      "count": 3
+    },
+    {
+      "prefix": "schema",
+      "name": "Schema Validation",
+      "impact": "HIGH",
+      "count": 1
+    },
+    {
+      "prefix": "repro",
+      "name": "Reproducibility",
+      "impact": "HIGH",
+      "count": 1
+    },
+    {
+      "prefix": "style",
+      "name": "Transformation Style",
+      "impact": "MEDIUM",
+      "count": 2
+    },
+    {
+      "prefix": "type",
+      "name": "Typing",
+      "impact": "MEDIUM",
+      "count": 1
+    },
+    {
+      "prefix": "test",
+      "name": "Testing",
+      "impact": "MEDIUM",
+      "count": 1
+    }
+  ]
+}
