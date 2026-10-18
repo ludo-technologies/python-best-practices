@@ -82,7 +82,7 @@ async def place_order(session: AsyncSession, data: OrderCreate) -> Order:
 ## Notes
 - Validate incoming IDs (length and characters) before trusting them; they end up in log files and response headers.
 - The stdlib `Formatter` ignores `extra` fields that are not in its format string. In production, use a JSON formatter (`python-json-logger`) or `structlog` so fields like `order_id` become searchable.
-- Context variables are copied into tasks created during the request, including `asyncio.create_task` and `asyncio.to_thread`, so their logs carry the same ID.
+- Context variables are copied into tasks created during the request, including `asyncio.create_task` and `asyncio.to_thread`, so their logs carry the same ID. `call_next` runs the app in its own task as well, so streamed response bodies and `BackgroundTasks` keep the ID after the middleware has reset its own copy.
 - Unhandled exceptions are logged by the server after this middleware has reset the variable; to get the ID on those tracebacks, log with `logger.exception(...)` inside the middleware and re-raise.
 - Never log passwords, tokens, `Authorization` or `Cookie` headers, full request bodies, or personal data; log IDs instead.
 - Configure logging once in the entrypoint; everything else only calls `logging.getLogger(__name__)`.
