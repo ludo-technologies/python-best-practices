@@ -41,6 +41,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engin
 TEST_DATABASE_URL = os.environ["TEST_DATABASE_URL"]  # a disposable PostgreSQL database
 
 MakeUser = Callable[..., Awaitable[User]]
+MakeInvoice = Callable[..., Awaitable[Invoice]]
 
 
 @pytest.fixture(scope="session")
@@ -83,6 +84,17 @@ def make_user(session: AsyncSession) -> MakeUser:
         return user
 
     return _make
+
+
+@pytest.fixture
+def make_invoice(session: AsyncSession) -> MakeInvoice:
+    async def _make(owner: User, total_cents: int = 1000) -> Invoice:
+        invoice = Invoice(owner_id=owner.id, total_cents=total_cents, lines=[])
+        session.add(invoice)
+        await session.flush()
+        return invoice
+
+    return _make
 ```
 
 ## Notes
@@ -91,7 +103,7 @@ def make_user(session: AsyncSession) -> MakeUser:
 - `create_all` is fine for the test schema; CI should still run `alembic upgrade head` or `alembic check` so migrations match the models (see `db-migrations-alembic`).
 - Code that opens its own sessions from `app.state.sessionmaker`, such as background jobs, bypasses the override; pass the session in, or bind a test sessionmaker to the same connection.
 - Tests of real concurrency (row locks, isolation levels) cannot share one connection; run them against a separate database and clean up by truncating tables.
-- Factory fixtures like `make_user` follow `testing/fixture-factory`.
+- Factory fixtures like `make_user` and `make_invoice` follow `testing/fixture-factory`. Pass relationships at construction (`lines=[...]`); a `lazy="raise"` collection cannot be read on a flushed object without an explicit load (see `db-eager-loading`).
 
 ## References
 - [SQLAlchemy - Joining a Session into an External Transaction](https://docs.sqlalchemy.org/en/20/orm/session_transaction.html#joining-a-session-into-an-external-transaction-such-as-for-test-suites)
