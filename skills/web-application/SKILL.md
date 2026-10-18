@@ -109,7 +109,7 @@ def create_app(settings: Settings) -> FastAPI:
         engine = create_async_engine(settings.database_url.get_secret_value(), pool_pre_ping=True)
         try:
             async with httpx.AsyncClient(
-                base_url=settings.payments_base_url, timeout=10.0
+                base_url=settings.payments_base_url, timeout=httpx.Timeout(10.0, connect=3.0)
             ) as payments_client:
                 app.state.sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
                 app.state.payments_client = payments_client
