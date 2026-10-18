@@ -53,7 +53,7 @@ async def read_invoice(invoice_id: int, user: CurrentUser, session: SessionDep) 
 @router.delete("/{invoice_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_invoice(invoice_id: int, user: CurrentUser, session: SessionDep) -> None:
     invoice = await get_owned_invoice(session, owner_id=user.id, invoice_id=invoice_id)
-    await session.delete(invoice)
+    await session.delete(invoice)  # lines go with it: Invoice.lines has cascade="all, delete-orphan"
     await session.commit()
 ```
 

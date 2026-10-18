@@ -37,7 +37,7 @@ class Invoice(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     owner: Mapped["User"] = relationship(lazy="raise")
-    lines: Mapped[list["InvoiceLine"]] = relationship(lazy="raise")
+    lines: Mapped[list["InvoiceLine"]] = relationship(lazy="raise", cascade="all, delete-orphan")
 
 
 async def list_invoices(session: AsyncSession, owner_id: int) -> list[InvoiceRead]:
@@ -57,6 +57,7 @@ async def list_invoices(session: AsyncSession, owner_id: int) -> list[InvoiceRea
 ## Notes
 - `selectinload` suits one-to-many and many-to-many: one extra query per batch of up to 500 parent rows, so a bounded page takes two queries in total. `joinedload` suits many-to-one and one-to-one; on a collection it multiplies rows and requires `.unique()` on the result.
 - Chain options for nested data: `selectinload(Invoice.lines).joinedload(InvoiceLine.product)`.
+- `cascade="all, delete-orphan"` makes `session.delete(invoice)` delete its lines too. Without it SQLAlchemy sets the children's `invoice_id` to NULL, which fails on a NOT NULL column and leaves orphans otherwise. A database-level `ondelete="CASCADE"` on the foreign key works as well, paired with `passive_deletes=True`.
 - On models you cannot change, add `raiseload("*")` as a query option to get the same protection per query.
 - A response model that includes relationships (`InvoiceRead.lines`) defines what the query must load; keep the query and the response model it serves next to each other.
 - Index foreign key columns used for filtering and loading (`index=True`); PostgreSQL does not index them automatically.
