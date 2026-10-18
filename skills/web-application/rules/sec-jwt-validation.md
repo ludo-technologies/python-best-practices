@@ -76,7 +76,7 @@ async def get_current_user(
     )
     try:
         user_id = decode_access_token(token, settings)
-    except jwt.InvalidTokenError as exc:  # expired, bad signature, wrong aud/iss, missing claim
+    except (jwt.InvalidTokenError, ValueError) as exc:  # expired, bad signature, wrong aud/iss, missing claim, non-numeric sub
         raise unauthorized from exc
     user = await session.get(User, user_id)
     if user is None or not user.is_active:  # deleted or deactivated after the token was issued
