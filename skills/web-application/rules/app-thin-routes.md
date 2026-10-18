@@ -50,7 +50,7 @@ async def pay_invoice(
     invoice = await get_owned_invoice(session, owner_id=owner_id, invoice_id=invoice_id)
     if invoice.paid_at is not None:
         raise ConflictError("Invoice already paid")
-    await charge(payments, invoice.id, invoice.total_cents)
+    await charge(payments, invoice.id, invoice.total_cents, idempotency_key=f"invoice-{invoice.id}")
     invoice.paid_at = now
     await session.commit()
     return invoice
@@ -69,7 +69,7 @@ async def pay(
 - `Annotated[T, Depends(...)]` aliases keep signatures short, are reused across routers, and give type checkers the real type; prefer them to `param: T = Depends(...)` defaults.
 - Services take plain values (`owner_id`, `now`), not `Request`. Passing the time in keeps time-dependent logic testable (see `coding-standards/design-pure-functions`).
 - Services raise domain errors and routes do not catch them; exception handlers translate them (see `api-error-responses`).
-- When a use case calls an external service and then commits, make the external call idempotent (an idempotency key) so a retry after a failed commit cannot charge twice.
+- When a use case calls an external service and then commits, send an idempotency key derived from the record (as `charge` does above) so a retry after a failed commit cannot charge twice.
 - A one-line read can query directly in the route. Extract a service when there is logic, more than one step, or reuse; do not add pass-through layers or repository classes that only forward calls (see `coding-standards/design-philosophy`).
 
 ## References

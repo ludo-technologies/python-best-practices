@@ -61,10 +61,14 @@ class PaymentGatewayError(Exception):
     pass
 
 
-async def charge(client: httpx.AsyncClient, order_id: int, amount_cents: int) -> PaymentRead:
+async def charge(
+    client: httpx.AsyncClient, order_id: int, amount_cents: int, *, idempotency_key: str
+) -> PaymentRead:
     try:
         response = await client.post(
-            "/charges", json={"order_id": order_id, "amount": amount_cents}
+            "/charges",
+            json={"order_id": order_id, "amount": amount_cents},
+            headers={"Idempotency-Key": idempotency_key},  # a retry after a lost commit cannot charge twice
         )
         response.raise_for_status()
     except httpx.HTTPError as exc:  # timeouts, connection errors, 4xx and 5xx
