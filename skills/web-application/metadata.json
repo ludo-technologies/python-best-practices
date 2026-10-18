@@ -1,0 +1,57 @@
+{
+  "version": "1.0.0",
+  "author": "Python Best Practices",
+  "abstract": "FastAPI web application best practices with SQLAlchemy 2.0, Alembic, and pydantic-settings. Covers security, database sessions and transactions, async I/O, API design, configuration, app structure, observability, and testing.",
+  "categories": 8,
+  "rules": 22,
+  "sections": [
+    {
+      "prefix": "sec",
+      "name": "Security",
+      "impact": "CRITICAL",
+      "count": 5
+    },
+    {
+      "prefix": "db",
+      "name": "Database",
+      "impact": "CRITICAL",
+      "count": 6
+    },
+    {
+      "prefix": "async",
+      "name": "Async I/O",
+      "impact": "CRITICAL",
+      "count": 2
+    },
+    {
+      "prefix": "api",
+      "name": "API Design",
+      "impact": "HIGH",
+      "count": 3
+    },
+    {
+      "prefix": "config",
+      "name": "Configuration",
+      "impact": "HIGH",
+      "count": 1
+    },
+    {
+      "prefix": "app",
+      "name": "App Structure",
+      "impact": "HIGH",
+      "count": 2
+    },
+    {
+      "prefix": "obs",
+      "name": "Observability",
+      "impact": "MEDIUM",
+      "count": 1
+    },
+    {
+      "prefix": "test",
+      "name": "Testing",
+      "impact": "MEDIUM",
+      "count": 2
+    }
+  ]
+}

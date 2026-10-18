@@ -69,6 +69,21 @@ NumPy and pandas best practices for data science and ML code. 13 rules across 8 
 | **Typing** | MEDIUM | numpy.typing.NDArray, pandas-stubs |
 | **Testing** | MEDIUM | assert_allclose, assert_frame_equal |
 
+### web-application
+
+FastAPI web application best practices with SQLAlchemy 2.0, Alembic, and pydantic-settings. 22 rules across 8 categories.
+
+| Category | Impact | Rules |
+|----------|--------|-------|
+| **Security** | CRITICAL | Argon2 password hashing, secrets and compare_digest, JWT validation, object-level authorization, explicit CORS origins |
+| **Database** | CRITICAL | bound parameters, session per request, one commit per use case, eager loading with lazy="raise", Alembic migrations, SQLAlchemy 2.0 style |
+| **Async I/O** | CRITICAL | no blocking calls in async def, shared httpx.AsyncClient with timeouts |
+| **API Design** | HIGH | separate Create/Update/Read models, exception handlers for domain errors, bounded keyset pagination |
+| **Configuration** | HIGH | pydantic-settings with SecretStr, fail at startup |
+| **App Structure** | HIGH | app factory with lifespan, thin routes with Annotated dependencies |
+| **Observability** | MEDIUM | request ID logging |
+| **Testing** | MEDIUM | dependency_overrides with ASGITransport, real database with per-test rollback |
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on adding new rules.
