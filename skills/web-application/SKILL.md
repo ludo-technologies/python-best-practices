@@ -213,6 +213,8 @@ class Settings(BaseSettings):
 
     database_url: SecretStr
     jwt_secret: SecretStr = Field(min_length=32)
+    jwt_issuer: str
+    jwt_audience: str
     cors_origins: list[str] = []
 
 

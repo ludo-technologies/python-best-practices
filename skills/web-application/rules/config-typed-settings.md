@@ -35,6 +35,8 @@ class Settings(BaseSettings):
 
     database_url: SecretStr  # required: no default
     jwt_secret: SecretStr = Field(min_length=32)
+    jwt_issuer: str
+    jwt_audience: str
     access_token_ttl_minutes: int = Field(default=15, gt=0, le=60)
     cors_origins: list[str] = []  # JSON in env: APP_CORS_ORIGINS='["https://app.example.com"]'
     payments_base_url: str

@@ -43,6 +43,8 @@ def settings() -> Settings:
     return Settings(
         database_url=SecretStr("postgresql+asyncpg://unused"),  # session is overridden below
         jwt_secret=SecretStr("test-secret-test-secret-test-secret"),
+        jwt_issuer="https://api.test",
+        jwt_audience="api.test",
         payments_base_url="https://payments.test",
         payments_api_key=SecretStr("test-key"),
     )

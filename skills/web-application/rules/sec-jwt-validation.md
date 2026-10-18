@@ -78,8 +78,8 @@ async def get_current_user(
         user_id = decode_access_token(token, settings)
     except jwt.InvalidTokenError as exc:  # expired, bad signature, wrong aud/iss, missing claim
         raise unauthorized from exc
-    user = await session.get(User, user_id)  # honors deleted or deactivated users
-    if user is None:
+    user = await session.get(User, user_id)
+    if user is None or not user.is_active:  # deleted or deactivated after the token was issued
         raise unauthorized
     return user
 
@@ -90,7 +90,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 ## Notes
 - Load the HS256 secret from settings as a `SecretStr` with `min_length=32` (see `config-typed-settings`); generate it with `python -c "import secrets; print(secrets.token_urlsafe(32))"`.
 - When other services verify your tokens, use RS256 or ES256 so they only hold the public key; pin `algorithms=["RS256"]` and fetch keys with `jwt.PyJWKClient` from the issuer's JWKS endpoint.
-- JWTs cannot be revoked before `exp`. Keep access tokens short (5-15 minutes), load the user on each request as above, and use refresh tokens or server-side sessions for long logins.
+- JWTs cannot be revoked before `exp`. Keep access tokens short (5-15 minutes), load the user and check `is_active` on each request as above, and use refresh tokens or server-side sessions for long logins.
 - PyJWT requires `sub` to be a string: encode `str(user_id)` and convert back on decode.
 - Use PyJWT (`pip install pyjwt`); the FastAPI docs moved away from `python-jose`.
 - If tokens travel in cookies instead of the `Authorization` header, set `HttpOnly`, `Secure`, and `SameSite`, and protect state-changing requests against CSRF.
