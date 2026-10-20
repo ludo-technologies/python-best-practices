@@ -1,5 +1,7 @@
 # Section Definitions
 
+All examples share one invoice application: models in `db-sqlalchemy-2-style`, `Settings` in `config-typed-settings`, `create_app` in `app-factory-lifespan`. Other rules show only the part they discuss.
+
 ## Security (sec)
 **Impact:** CRITICAL
 

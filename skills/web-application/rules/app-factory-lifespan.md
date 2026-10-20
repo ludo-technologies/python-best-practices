@@ -1,19 +1,22 @@
 ---
 title: Build the App in a Factory and Manage Resources in lifespan
 impact: HIGH
-impactDescription: No side effects at import time; resources open once, close on shutdown, and can be replaced in tests
+impactDescription: No import-time side effects; resources replaceable in tests
 tags: [app-structure, fastapi, lifespan, app-factory, resources]
 ---
 
 # Build the App in a Factory and Manage Resources in lifespan [HIGH]
 
 ## Description
-A module-level `engine = create_async_engine(...)`, `client = httpx.AsyncClient()`, and `app = FastAPI()` with `@app.on_event("startup")` hooks mean that importing a module reads the environment and opens resources, every test shares one global app, and clients are never closed. `on_event` is deprecated. Build the app in `create_app(settings)`, which registers middleware, exception handlers, and routers, and acquire long-lived resources such as the engine and HTTP clients in a `lifespan` async context manager that releases them after `yield`. Only the ASGI entrypoint module calls the factory.
+Module-level `engine = create_async_engine(...)`, `client = httpx.AsyncClient()`, and `app = FastAPI()` with `@app.on_event("startup")` mean that importing a module reads the environment and opens resources, every test shares one global app, and clients are never closed. `on_event` is deprecated. Build the app in `create_app(settings)` and acquire long-lived resources in a `lifespan` context manager that releases them after `yield`. Only the ASGI entrypoint calls the factory.
+
+The `create_app` below is the complete factory; other rules show only the part they discuss.
 
 ## Bad Example
 ```python
 # app/main.py
-engine = create_async_engine(os.environ["DATABASE_URL"])  # reads env and builds a pool at import
+# reads the environment and builds a pool at import time
+engine = create_async_engine(os.environ["DATABASE_URL"])
 http_client = httpx.AsyncClient()  # never closed
 
 app = FastAPI()
@@ -33,18 +36,32 @@ from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+from app.config import Settings
+from app.errors import add_exception_handlers
+from app.observability import add_request_id_middleware
+from app.routers import auth, invoices, users
 
 
 def create_app(settings: Settings) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        engine = create_async_engine(settings.database_url.get_secret_value(), pool_pre_ping=True)
+        engine = create_async_engine(
+            settings.database_url.get_secret_value(), pool_pre_ping=True
+        )
+        payments_api_key = settings.payments_api_key.get_secret_value()
         try:
             async with httpx.AsyncClient(
-                base_url=settings.payments_base_url, timeout=httpx.Timeout(10.0, connect=3.0)
+                base_url=settings.payments_base_url,
+                timeout=httpx.Timeout(10.0, connect=3.0),
+                limits=httpx.Limits(max_connections=50),
+                headers={"Authorization": f"Bearer {payments_api_key}"},
             ) as payments_client:
-                app.state.sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
+                app.state.sessionmaker = async_sessionmaker(
+                    engine, expire_on_commit=False
+                )
                 app.state.payments_client = payments_client
                 yield
         finally:
@@ -52,6 +69,14 @@ def create_app(settings: Settings) -> FastAPI:
 
     app = FastAPI(lifespan=lifespan)
     app.state.settings = settings
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PATCH", "DELETE"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
+    add_request_id_middleware(app)
     add_exception_handlers(app)
     app.include_router(auth.router)
     app.include_router(users.router)

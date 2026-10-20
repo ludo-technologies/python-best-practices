@@ -53,6 +53,10 @@ skills/web-application/
     └── test-db-rollback.md           # Real database, SAVEPOINT per test
 ```
 
+## Shared Example
+
+All examples share one invoice application. Models (`User`, `Invoice`, `InvoiceLine`) are defined in `db-sqlalchemy-2-style`, `Settings` in `config-typed-settings`, and `create_app` in `app-factory-lifespan`; other rules show only the part they discuss. When a rule adds a field or helper, update the canonical file too.
+
 ## Rules
 
 ### Security (CRITICAL)
@@ -103,4 +107,4 @@ skills/web-application/
 
 ## Usage
 
-This skill is applied when the task involves a FastAPI backend, REST endpoints, SQLAlchemy, Alembic, or authentication. It is not meant for Django or Flask projects.
+This skill is automatically applied when working with Alembic files (`alembic.ini`, `**/alembic/**`, `**/migrations/**`) or router modules (`**/routers/**`, `**/api/**`), and whenever the task involves a FastAPI backend, REST endpoints, SQLAlchemy, or authentication. It is not meant for Django or Flask projects.
