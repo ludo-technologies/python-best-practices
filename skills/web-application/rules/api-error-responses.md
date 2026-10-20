@@ -1,24 +1,30 @@
 ---
 title: Map Domain Errors to HTTP Responses in Exception Handlers
 impact: HIGH
-impactDescription: Correct status codes and one error shape for clients, without leaking internal details
+impactDescription: Correct status codes and one error shape, no leaked internals
 tags: [api, errors, exception-handlers, status-codes, fastapi]
 ---
 
 # Map Domain Errors to HTTP Responses in Exception Handlers [HIGH]
 
 ## Description
-Services should raise domain exceptions (`NotFoundError`, `ConflictError`) and know nothing about HTTP; one place maps them to status codes. Three generated anti-patterns are common: returning `200` with `{"error": ...}`, so clients and monitoring see success; catching `Exception` and returning `str(exc)`, which leaks SQL, file paths, and internals; and raising `HTTPException` deep inside services, which ties business logic to FastAPI. Register exception handlers for domain errors, use precise status codes, and let unexpected exceptions propagate to a logged 500.
+Services should raise domain exceptions (`NotFoundError`, `ConflictError`) and know nothing about HTTP; one place maps them to status codes. Common anti-patterns: returning `200` with `{"error": ...}`, so clients and monitoring see success; catching `Exception` and returning `str(exc)`, which leaks SQL and file paths; and raising `HTTPException` deep inside services. Register exception handlers for domain errors, use precise status codes, and let unexpected exceptions propagate to a logged 500.
 
 ## Bad Example
 ```python
-@router.post("/users")
+router = APIRouter(prefix="/users")
+
+
+@router.post("")
 async def create_user(body: UserCreate, session: SessionDep) -> dict[str, Any]:
     try:
         user = await register_user(session, body)
         return {"success": True, "user": UserRead.model_validate(user)}
     except Exception as exc:
-        return {"success": False, "error": str(exc)}  # 200 OK carrying the database error text
+        return {
+            "success": False,
+            "error": str(exc),
+        }  # 200 OK carrying the database error
 ```
 
 ## Good Example
@@ -40,11 +46,15 @@ class ConflictError(Exception):
 def add_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(NotFoundError)
     async def handle_not_found(request: Request, exc: NotFoundError) -> JSONResponse:
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)})
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)}
+        )
 
     @app.exception_handler(ConflictError)
     async def handle_conflict(request: Request, exc: ConflictError) -> JSONResponse:
-        return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"detail": str(exc)})
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT, content={"detail": str(exc)}
+        )
 
 
 # app/services/users.py: no FastAPI imports
@@ -54,13 +64,18 @@ async def register_user(session: AsyncSession, data: UserCreate) -> User:
     session.add(user)
     try:
         await session.commit()
-    except IntegrityError as exc:  # uq_users_email is the only constraint this insert can violate
+    except (
+        IntegrityError
+    ) as exc:  # uq_users_email is the only constraint this can violate
         await session.rollback()
         raise ConflictError("Email already registered") from exc
     return user
 
 
 # app/routers/users.py
+router = APIRouter(prefix="/users")
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_user(body: UserCreate, session: SessionDep) -> UserRead:
     return UserRead.model_validate(await register_user(session, body))

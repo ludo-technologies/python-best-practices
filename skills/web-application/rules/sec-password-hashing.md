@@ -1,14 +1,14 @@
 ---
 title: Hash Passwords with Argon2
 impact: CRITICAL
-impactDescription: A leaked users table stays useless to attackers instead of being cracked offline
+impactDescription: A leaked users table cannot be cracked offline
 tags: [security, passwords, argon2, pwdlib, authentication]
 ---
 
 # Hash Passwords with Argon2 [CRITICAL]
 
 ## Description
-Store passwords only as hashes from a slow, salted, memory-hard algorithm. General-purpose hashes (`hashlib.sha256`, `md5`) are designed to be fast, so a leaked table can be brute-forced at billions of guesses per second, and unsalted digests are identical for identical passwords. Use Argon2id through `pwdlib` (the library the FastAPI docs use) and verify with the library instead of `==`, rehashing when parameters change. Hashing is deliberately expensive CPU work, so run it in a worker thread from `async def` code.
+Store passwords only as hashes from a slow, salted, memory-hard algorithm. `hashlib.sha256` and `md5` are built to be fast, so a leaked table is brute-forced at billions of guesses per second, and unsalted digests repeat for equal passwords. Use Argon2id through `pwdlib`, verify with the library instead of `==`, rehash when parameters change, and run the CPU-heavy work in a thread from `async def` code.
 
 ## Bad Example
 ```python

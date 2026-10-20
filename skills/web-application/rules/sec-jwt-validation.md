@@ -1,14 +1,14 @@
 ---
 title: Validate JWTs with a Pinned Algorithm and Required Claims
 impact: CRITICAL
-impactDescription: Prevents forged, expired, and wrong-audience tokens from authenticating
+impactDescription: Forged, expired, and wrong-audience tokens are rejected
 tags: [security, jwt, pyjwt, authentication, oauth2]
 ---
 
 # Validate JWTs with a Pinned Algorithm and Required Claims [CRITICAL]
 
 ## Description
-`jwt.decode` checks only what you ask it to. A token without `exp` stays valid forever unless `exp` is required; a token issued for another service is accepted unless the audience is checked; and taking `algorithms` from the token header hands the choice to the attacker, the root of `alg=none` and RS256/HS256 key-confusion attacks. Pin the algorithm list to what you issue, require `exp`, `iat`, `sub`, `iss`, and `aud`, validate issuer and audience, keep access tokens short-lived, and turn every `InvalidTokenError` into a 401.
+`jwt.decode` checks only what you ask it to. A token without `exp` stays valid forever, a token issued for another service is accepted unless the audience is checked, and taking `algorithms` from the token header hands the choice to the attacker (`alg=none`, RS256/HS256 key confusion). Pin the algorithm, require `exp`, `iat`, `sub`, `iss`, and `aud`, keep access tokens short-lived, and turn every `InvalidTokenError` into a 401.
 
 ## Bad Example
 ```python
@@ -19,7 +19,8 @@ SECRET_KEY = "secret"  # hard-coded and guessable
 
 def decode_token(token: str) -> int:
     header = jwt.get_unverified_header(token)
-    claims = jwt.decode(token, SECRET_KEY, algorithms=[header["alg"]])  # attacker picks alg
+    alg = header["alg"]  # the attacker picks the algorithm
+    claims = jwt.decode(token, SECRET_KEY, algorithms=[alg])
     return int(claims["sub"])  # tokens without exp, aud, or iss are accepted
 
 
@@ -49,7 +50,9 @@ def create_access_token(user_id: int, settings: Settings, now: datetime) -> str:
         "iat": now,
         "exp": now + timedelta(minutes=settings.access_token_ttl_minutes),
     }
-    return jwt.encode(claims, settings.jwt_secret.get_secret_value(), algorithm=ALGORITHM)
+    return jwt.encode(
+        claims, settings.jwt_secret.get_secret_value(), algorithm=ALGORITHM
+    )
 
 
 def decode_access_token(token: str, settings: Settings) -> int:
@@ -76,10 +79,11 @@ async def get_current_user(
     )
     try:
         user_id = decode_access_token(token, settings)
-    except (jwt.InvalidTokenError, ValueError) as exc:  # expired, bad signature, wrong aud/iss, missing claim, non-numeric sub
+    except (jwt.InvalidTokenError, ValueError) as exc:
+        # expired, bad signature, wrong aud/iss, missing claim, non-numeric sub
         raise unauthorized from exc
     user = await session.get(User, user_id)
-    if user is None or not user.is_active:  # deleted or deactivated after the token was issued
+    if user is None or not user.is_active:  # deleted or deactivated since issue
         raise unauthorized
     return user
 

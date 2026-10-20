@@ -1,14 +1,14 @@
 ---
 title: Authorize Access to Every Object, Not Just the Endpoint
 impact: CRITICAL
-impactDescription: Prevents users from reading or changing other users' data by editing an ID in the URL (IDOR / BOLA)
+impactDescription: Editing an ID in the URL cannot reach another user's data (IDOR)
 tags: [security, authorization, idor, bola, multi-tenancy]
 ---
 
 # Authorize Access to Every Object, Not Just the Endpoint [CRITICAL]
 
 ## Description
-Authentication says who the caller is; authorization decides whether they may touch this particular record. Broken object level authorization, number one in the OWASP API Security Top 10, happens when `/invoices/{invoice_id}` loads the row by primary key and returns it to any logged-in user. Scope every query by owner or tenant in the same statement that loads the object, answer 404 for objects the caller may not see so IDs are not confirmed to exist, and require authentication at the router level so a new endpoint is protected by default.
+Authentication says who the caller is; authorization decides whether they may touch this record. Broken object level authorization, number one in the OWASP API Security Top 10, happens when `/invoices/{invoice_id}` loads the row by primary key and returns it to any logged-in user. Scope every query by owner or tenant in the statement that loads the object, answer 404 for objects the caller may not see, and require authentication at the router level so new endpoints are protected by default.
 
 ## Bad Example
 ```python
@@ -16,7 +16,9 @@ router = APIRouter(prefix="/invoices")
 
 
 @router.get("/{invoice_id}")
-async def read_invoice(invoice_id: int, user: CurrentUser, session: SessionDep) -> InvoiceRead:
+async def read_invoice(
+    invoice_id: int, user: CurrentUser, session: SessionDep
+) -> InvoiceRead:
     invoice = await session.get(Invoice, invoice_id)  # any user can read any invoice
     if invoice is None:
         raise HTTPException(status_code=404)
@@ -24,8 +26,9 @@ async def read_invoice(invoice_id: int, user: CurrentUser, session: SessionDep) 
 
 
 @router.delete("/{invoice_id}", status_code=204)
-async def delete_invoice(invoice_id: int, session: SessionDep) -> None:
-    ...  # forgot CurrentUser: anonymous callers can delete
+async def delete_invoice(
+    invoice_id: int, session: SessionDep
+) -> None: ...  # forgot CurrentUser: anonymous callers can delete
 ```
 
 ## Good Example
@@ -33,7 +36,9 @@ async def delete_invoice(invoice_id: int, session: SessionDep) -> None:
 router = APIRouter(prefix="/invoices", dependencies=[Depends(get_current_user)])
 
 
-async def get_owned_invoice(session: AsyncSession, owner_id: int, invoice_id: int) -> Invoice:
+async def get_owned_invoice(
+    session: AsyncSession, owner_id: int, invoice_id: int
+) -> Invoice:
     invoice = await session.scalar(
         select(Invoice)
         .where(Invoice.id == invoice_id, Invoice.owner_id == owner_id)
@@ -45,15 +50,19 @@ async def get_owned_invoice(session: AsyncSession, owner_id: int, invoice_id: in
 
 
 @router.get("/{invoice_id}")
-async def read_invoice(invoice_id: int, user: CurrentUser, session: SessionDep) -> InvoiceRead:
+async def read_invoice(
+    invoice_id: int, user: CurrentUser, session: SessionDep
+) -> InvoiceRead:
     invoice = await get_owned_invoice(session, owner_id=user.id, invoice_id=invoice_id)
     return InvoiceRead.model_validate(invoice)
 
 
 @router.delete("/{invoice_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_invoice(invoice_id: int, user: CurrentUser, session: SessionDep) -> None:
+async def delete_invoice(
+    invoice_id: int, user: CurrentUser, session: SessionDep
+) -> None:
     invoice = await get_owned_invoice(session, owner_id=user.id, invoice_id=invoice_id)
-    await session.delete(invoice)  # lines go with it: Invoice.lines has cascade="all, delete-orphan"
+    await session.delete(invoice)  # Invoice.lines cascades "all, delete-orphan"
     await session.commit()
 ```
 

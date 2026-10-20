@@ -1,14 +1,14 @@
 ---
 title: Load Relationships Explicitly and Make Lazy Loads Raise
 impact: CRITICAL
-impactDescription: Turns N+1 queries and async MissingGreenlet crashes into a small, predictable number of queries per request
+impactDescription: Two queries per page instead of N+1 or MissingGreenlet
 tags: [database, sqlalchemy, n-plus-one, selectinload, performance]
 ---
 
 # Load Relationships Explicitly and Make Lazy Loads Raise [CRITICAL]
 
 ## Description
-Reading a relationship that was not loaded triggers a lazy load. In sync code that silently issues one query per row: a list endpoint returning 50 invoices with their lines runs 51 queries. In async code the implicit I/O cannot be awaited and fails with `MissingGreenlet`, often only on some code paths. Declare `lazy="raise"` on relationships so any implicit load fails loudly in tests, and load what each query needs with `selectinload` for collections and `joinedload` for many-to-one references.
+Reading a relationship that was not loaded triggers a lazy load. In sync code that silently issues one query per row: 50 invoices with their lines run 51 queries. In async code the implicit I/O fails with `MissingGreenlet`, often only on some code paths. Declare `lazy="raise"` on relationships so any implicit load fails loudly in tests, and load what each query needs with `selectinload` for collections and `joinedload` for many-to-one references.
 
 ## Bad Example
 ```python
@@ -21,7 +21,9 @@ class Invoice(Base):
 
 
 async def list_invoices(session: AsyncSession, owner_id: int) -> list[InvoiceRead]:
-    invoices = await session.scalars(select(Invoice).where(Invoice.owner_id == owner_id))
+    invoices = await session.scalars(
+        select(Invoice).where(Invoice.owner_id == owner_id)
+    )
     # Each .lines access is one more query (sync) or MissingGreenlet (async)
     return [InvoiceRead.model_validate(invoice) for invoice in invoices]
 ```
@@ -31,13 +33,12 @@ async def list_invoices(session: AsyncSession, owner_id: int) -> list[InvoiceRea
 from sqlalchemy.orm import joinedload, selectinload
 
 
-class Invoice(Base):
-    __tablename__ = "invoices"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
-    owner: Mapped["User"] = relationship(lazy="raise")
-    lines: Mapped[list["InvoiceLine"]] = relationship(lazy="raise", cascade="all, delete-orphan")
+class Invoice(Base):  # full model in db-sqlalchemy-2-style
+    ...
+    owner: Mapped[User] = relationship(lazy="raise")
+    lines: Mapped[list["InvoiceLine"]] = relationship(
+        lazy="raise", cascade="all, delete-orphan"
+    )
 
 
 async def list_invoices(session: AsyncSession, owner_id: int) -> list[InvoiceRead]:

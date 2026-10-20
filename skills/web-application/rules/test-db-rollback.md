@@ -1,14 +1,14 @@
 ---
 title: Run Tests Against a Real Database in a Rolled-Back Transaction
 impact: MEDIUM
-impactDescription: Tests catch real SQL, constraint, and dialect bugs while staying isolated and fast
+impactDescription: Real SQL and constraint bugs caught, tests still isolated
 tags: [testing, database, sqlalchemy, postgresql, fixtures]
 ---
 
 # Run Tests Against a Real Database in a Rolled-Back Transaction [MEDIUM]
 
 ## Description
-A mocked `AsyncSession` only proves that code calls `add()` and `commit()`, not that queries, constraints, and eager loading work. SQLite standing in for PostgreSQL hides dialect differences in types, `ILIKE`, JSON, constraint timing, and locking. Run tests against the same database engine as production, create the schema once per test session, and wrap each test in an outer transaction that is rolled back afterwards. With `join_transaction_mode="create_savepoint"`, code under test can call `commit()` and `rollback()` as usual: they act on a SAVEPOINT, and the outer rollback discards everything.
+A mocked `AsyncSession` only proves that code calls `add()` and `commit()`, not that queries, constraints, and eager loading work, and SQLite standing in for PostgreSQL hides dialect differences. Run tests against the production database engine, create the schema once per session, and wrap each test in an outer transaction that is rolled back afterwards. With `join_transaction_mode="create_savepoint"`, code under test can `commit()` as usual: it acts on a SAVEPOINT, and the outer rollback discards everything.
 
 ## Bad Example
 ```python
@@ -22,7 +22,7 @@ def session() -> AsyncMock:
 
 @pytest.fixture
 async def sqlite_session() -> AsyncIterator[AsyncSession]:
-    engine = create_async_engine("sqlite+aiosqlite:///test.db")  # not the production dialect
+    engine = create_async_engine("sqlite+aiosqlite:///test.db")  # not production
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     async with AsyncSession(engine) as session:

@@ -1,14 +1,14 @@
 ---
 title: Test Endpoints with dependency_overrides, Not Patching
 impact: MEDIUM
-impactDescription: Tests run real routing, validation, and authorization while replacing only external resources
+impactDescription: Real routing, validation, and authorization in every endpoint test
 tags: [testing, fastapi, dependency-overrides, httpx, pytest]
 ---
 
 # Test Endpoints with dependency_overrides, Not Patching [MEDIUM]
 
 ## Description
-Patching module attributes breaks when code moves and often has no effect at all: `Annotated[User, Depends(get_current_user)]` holds a reference to the original function, so patching `app.security.get_current_user` changes nothing. FastAPI's `app.dependency_overrides` replaces a dependency for one app instance. Build a fresh app per test with `create_app(test_settings)`, override only the dependencies that leave the process (database session, HTTP clients), and drive it with `httpx.AsyncClient` over `ASGITransport`. Keep authentication real by logging in with real credentials, so auth and object-level authorization are exercised too.
+Patching module attributes breaks when code moves and often has no effect: `Annotated[User, Depends(get_current_user)]` holds a reference to the original function, so patching `app.security.get_current_user` changes nothing. Build a fresh app per test with `create_app(test_settings)`, override only the dependencies that leave the process (database session, HTTP clients) through `app.dependency_overrides`, and drive it with `httpx.AsyncClient` over `ASGITransport`. Keep authentication real by logging in with real credentials.
 
 ## Bad Example
 ```python
@@ -21,8 +21,13 @@ from app.asgi import app  # global app built from the real environment
 
 def test_read_invoice() -> None:
     with (
-        patch("app.routers.invoices.get_owned_invoice", AsyncMock(return_value=FAKE_INVOICE)),
-        patch("app.security.get_current_user", AsyncMock(return_value=FAKE_USER)),  # no effect
+        patch(
+            "app.routers.invoices.get_owned_invoice",
+            AsyncMock(return_value=FAKE_INVOICE),
+        ),
+        patch(
+            "app.security.get_current_user", AsyncMock(return_value=FAKE_USER)
+        ),  # no effect
     ):
         response = TestClient(app).get("/invoices/1")
     assert response.status_code == 200  # fails with 401, or passes for the wrong reason
@@ -41,7 +46,9 @@ from pydantic import SecretStr
 @pytest.fixture
 def settings() -> Settings:
     return Settings(
-        database_url=SecretStr("postgresql+asyncpg://unused"),  # session is overridden below
+        database_url=SecretStr(
+            "postgresql+asyncpg://unused"
+        ),  # session is overridden below
         jwt_secret=SecretStr("test-secret-test-secret-test-secret"),
         jwt_issuer="https://api.test",
         jwt_audience="api.test",
@@ -51,22 +58,29 @@ def settings() -> Settings:
 
 
 @pytest.fixture
-async def client(session: AsyncSession, settings: Settings) -> AsyncIterator[httpx.AsyncClient]:
+async def client(
+    session: AsyncSession, settings: Settings
+) -> AsyncIterator[httpx.AsyncClient]:
     app = create_app(settings)
 
     async def override_session() -> AsyncIterator[AsyncSession]:
         yield session  # per-test transaction, see test-db-rollback
 
+    def fake_payments(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"status": "paid"})
+
     payments = httpx.AsyncClient(
-        base_url="https://payments.test",
-        transport=httpx.MockTransport(lambda request: httpx.Response(200, json={"status": "paid"})),
+        base_url="https://payments.test", transport=httpx.MockTransport(fake_payments)
     )
     app.dependency_overrides[get_session] = override_session
     app.dependency_overrides[get_payments_client] = lambda: payments
 
-    # ASGITransport does not run the lifespan; every lifespan resource is overridden above
+    # ASGITransport skips the lifespan; every lifespan resource is overridden above
     transport = httpx.ASGITransport(app=app)
-    async with payments, httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+    async with (
+        payments,
+        httpx.AsyncClient(transport=transport, base_url="http://test") as client,
+    ):
         yield client
 ```
 
@@ -80,7 +94,8 @@ async def test_user_cannot_read_another_users_invoice(
     bob = await make_user(email="bob@example.com")
     bobs_invoice = await make_invoice(owner=bob)
     login = await client.post(
-        "/auth/token", data={"username": "alice@example.com", "password": "correct horse battery"}
+        "/auth/token",
+        data={"username": "alice@example.com", "password": "correct horse battery"},
     )
 
     response = await client.get(

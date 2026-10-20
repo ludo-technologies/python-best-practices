@@ -1,24 +1,28 @@
 ---
 title: Correlate Logs with a Request ID
 impact: MEDIUM
-impactDescription: Every log line of a failing request can be found from one ID in the response or error report
+impactDescription: Every log line of a failing request is findable from one ID
 tags: [observability, logging, request-id, contextvars, middleware]
 ---
 
 # Correlate Logs with a Request ID [MEDIUM]
 
 ## Description
-Under concurrency, log lines from different requests interleave, and without a shared identifier you cannot reconstruct what happened in the one that failed. Assign a request ID in middleware (reuse a validated `X-Request-ID` from your proxy, or generate one), keep it in a `ContextVar`, attach it to every log record with a logging filter, and return it in the response header so users and support can quote it. Log through module loggers with structured `extra` fields, never `print`, and never log secrets, tokens, or whole request bodies.
+Under concurrency, log lines from different requests interleave, and without a shared identifier you cannot reconstruct the one that failed. Assign a request ID in middleware (reuse a validated `X-Request-ID` from your proxy, or generate one), keep it in a `ContextVar`, attach it to every log record with a logging filter, and return it in the response header. Log through module loggers with structured `extra` fields, never `print`, and never log secrets, tokens, or whole request bodies.
 
 ## Bad Example
 ```python
-@router.post("/orders")
-async def create_order(body: OrderCreate, request: Request) -> OrderRead:
-    print(f"creating order {body}")  # no level or logger; may print card data
-    logging.info("auth header: %s", request.headers.get("Authorization"))  # bearer token in logs
-    order = await place_order(body)
-    logging.info("order created")  # which request? which order?
-    return OrderRead.model_validate(order)
+router = APIRouter(prefix="/invoices", dependencies=[Depends(get_current_user)])
+
+
+@router.post("")
+async def create_invoice(body: InvoiceCreate, request: Request) -> InvoiceRead:
+    print(f"creating invoice {body}")  # no level or logger; may print personal data
+    auth = request.headers.get("Authorization")
+    logging.info("auth header: %s", auth)  # bearer token in the logs
+    invoice = await create_invoice(body)
+    logging.info("invoice created")  # which request? which invoice?
+    return InvoiceRead.model_validate(invoice)
 ```
 
 ## Good Example
@@ -46,7 +50,9 @@ def configure_logging(level: str) -> None:
     handler = logging.StreamHandler()
     handler.addFilter(RequestIdFilter())
     handler.setFormatter(
-        logging.Formatter("%(asctime)s %(levelname)s [%(request_id)s] %(name)s: %(message)s")
+        logging.Formatter(
+            "%(asctime)s %(levelname)s [%(request_id)s] %(name)s: %(message)s"
+        )
     )
     logging.basicConfig(level=level, handlers=[handler], force=True)
 
@@ -67,21 +73,26 @@ def add_request_id_middleware(app: FastAPI) -> None:
         return response
 
 
-# app/services/orders.py
+# app/services/invoices.py
 logger = logging.getLogger(__name__)
 
 
-async def place_order(session: AsyncSession, data: OrderCreate) -> Order:
-    order = Order(**data.model_dump())
-    session.add(order)
+async def create_invoice(
+    session: AsyncSession, owner_id: int, data: InvoiceCreate
+) -> Invoice:
+    invoice = Invoice(owner_id=owner_id, **data.model_dump())
+    session.add(invoice)
     await session.commit()
-    logger.info("order placed", extra={"order_id": order.id, "total_cents": order.total_cents})
-    return order
+    logger.info(
+        "invoice created",
+        extra={"invoice_id": invoice.id, "total_cents": invoice.total_cents},
+    )
+    return invoice
 ```
 
 ## Notes
 - Validate incoming IDs (length and characters) before trusting them; they end up in log files and response headers.
-- The stdlib `Formatter` ignores `extra` fields that are not in its format string. In production, use a JSON formatter (`python-json-logger`) or `structlog` so fields like `order_id` become searchable.
+- The stdlib `Formatter` ignores `extra` fields that are not in its format string. In production, use a JSON formatter (`python-json-logger`) or `structlog` so fields like `invoice_id` become searchable.
 - Context variables are copied into tasks created during the request, including `asyncio.create_task` and `asyncio.to_thread`, so their logs carry the same ID. `call_next` runs the app in its own task as well, so streamed response bodies and `BackgroundTasks` keep the ID after the middleware has reset its own copy.
 - Unhandled exceptions are logged by the server after this middleware has reset the variable; to get the ID on those tracebacks, log with `logger.exception(...)` inside the middleware and re-raise.
 - Never log passwords, tokens, `Authorization` or `Cookie` headers, full request bodies, or personal data; log IDs instead.

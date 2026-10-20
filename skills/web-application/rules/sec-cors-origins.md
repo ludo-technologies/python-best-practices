@@ -1,14 +1,14 @@
 ---
 title: List Allowed CORS Origins Explicitly
 impact: CRITICAL
-impactDescription: Prevents any website a user visits from reading their authenticated API responses
+impactDescription: Other websites cannot read a user's authenticated responses
 tags: [security, cors, middleware, starlette, cookies]
 ---
 
 # List Allowed CORS Origins Explicitly [CRITICAL]
 
 ## Description
-CORS tells browsers which other sites may read your API's responses. The most common generated configuration, `allow_origins=["*"]` together with `allow_credentials=True`, does not mean "public API": Starlette's `CORSMiddleware` answers such requests by echoing the caller's `Origin` back with `Access-Control-Allow-Credentials: true`, so script on any website can make requests with the user's cookies and read the results. Load the exact list of trusted origins from settings, default to none, and allow only the methods and headers the frontend uses.
+CORS tells browsers which other sites may read your API's responses. `allow_origins=["*"]` with `allow_credentials=True` does not mean "public API": Starlette echoes the caller's `Origin` with `Access-Control-Allow-Credentials: true`, so script on any website can send the user's cookies and read the result. Load the exact list of trusted origins from settings, default to none, and allow only the methods and headers the frontend uses.
 
 ## Bad Example
 ```python
@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,  # with "*", Starlette reflects any Origin and allows credentials
+    allow_credentials=True,  # with "*", Starlette reflects any Origin
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -25,23 +25,18 @@ app.add_middleware(
 
 ## Good Example
 ```python
+# Settings.cors_origins: list[str] = []  (see config-typed-settings)
+# APP_CORS_ORIGINS='["https://app.example.com"]'
 from fastapi.middleware.cors import CORSMiddleware
 
-
-class Settings(BaseSettings):
-    cors_origins: list[str] = []  # APP_CORS_ORIGINS='["https://app.example.com"]'
-
-
-def create_app(settings: Settings) -> FastAPI:
-    app = FastAPI(lifespan=lifespan)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_origins,  # empty means no cross-origin access
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PATCH", "DELETE"],
-        allow_headers=["Authorization", "Content-Type"],
-    )
-    return app
+# inside create_app(settings) (see app-factory-lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,  # empty means no cross-origin access
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
+)
 ```
 
 ## Notes

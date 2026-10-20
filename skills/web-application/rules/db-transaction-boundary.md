@@ -1,21 +1,21 @@
 ---
 title: Commit Once per Use Case, Not in Helpers or Dependency Teardown
 impact: CRITICAL
-impactDescription: Prevents partial writes and failed commits being reported to the client as success
+impactDescription: No partial writes, and a failed commit never returns 200
 tags: [database, transactions, sqlalchemy, unit-of-work, fastapi]
 ---
 
 # Commit Once per Use Case, Not in Helpers or Dependency Teardown [CRITICAL]
 
 ## Description
-A request that changes data should succeed or fail as one transaction. When helper functions each call `commit()`, a failure halfway through leaves the first half persisted. Committing in the session dependency after `yield` looks tidy but is worse: by default FastAPI runs the code after `yield` once the response has already been sent, so a failed commit (constraint violation, serialization failure, dropped connection) reaches the client as `200 OK` while nothing was saved. Let helpers only add and modify objects, and commit once, explicitly, in the function that owns the use case, before the response is built.
+A request that changes data should succeed or fail as one transaction. Helpers that each call `commit()` leave the first half persisted when a later step fails. Committing after `yield` in the session dependency is worse: by default FastAPI runs that code after the response is sent, so a failed commit reaches the client as `200 OK`. Let helpers only add and modify objects, and commit once, explicitly, in the function that owns the use case.
 
 ## Bad Example
 ```python
 async def get_session(request: Request) -> AsyncIterator[AsyncSession]:
     async with request.app.state.sessionmaker() as session:
         yield session
-        await session.commit()  # runs after the response is sent; failures are invisible
+        await session.commit()  # runs after the response; failures are invisible
 
 
 async def add_line(session: AsyncSession, invoice: Invoice, line: LineCreate) -> None:
@@ -23,9 +23,11 @@ async def add_line(session: AsyncSession, invoice: Invoice, line: LineCreate) ->
     await session.commit()  # commits in the middle of the use case
 
 
-async def add_lines(session: AsyncSession, invoice: Invoice, lines: list[LineCreate]) -> None:
+async def add_lines(
+    session: AsyncSession, invoice: Invoice, lines: list[LineCreate]
+) -> None:
     for line in lines:
-        await add_line(session, invoice, line)  # line 3 fails: lines 1 and 2 are already saved
+        await add_line(session, invoice, line)  # line 3 fails: lines 1 and 2 are saved
 ```
 
 ## Good Example
@@ -47,6 +49,9 @@ async def add_lines(
         add_line(invoice, line)
     await session.commit()  # one commit; an exception before it rolls everything back
     return invoice
+
+
+router = APIRouter(prefix="/invoices", dependencies=[Depends(get_current_user)])
 
 
 @router.post("/{invoice_id}/lines", status_code=status.HTTP_201_CREATED)

@@ -1,14 +1,14 @@
 ---
 title: Create the Engine Once and a Session per Request
 impact: CRITICAL
-impactDescription: Prevents cross-request data leaks, connection exhaustion, and concurrent-use errors
+impactDescription: No cross-request leaks, connection exhaustion, or concurrent-use errors
 tags: [database, sqlalchemy, asyncsession, dependency-injection, connection-pool]
 ---
 
 # Create the Engine Once and a Session per Request [CRITICAL]
 
 ## Description
-The engine owns the connection pool and should exist once per process: create it in the lifespan and dispose of it on shutdown. A `Session` or `AsyncSession` is a unit of work with its own identity map and transaction, and it is not safe to share between concurrent requests or tasks. A module-level session mixes requests' transactions and cached objects; an engine created per request opens a new pool every time and exhausts database connections. Hand out sessions through a yield dependency that opens a fresh session for each request and always closes it.
+The engine owns the connection pool and should exist once per process: create it in the lifespan and dispose of it on shutdown. A `Session` is a unit of work with its own identity map and transaction and must not be shared between concurrent requests. A module-level session mixes requests' transactions; an engine created per request opens a new pool every time. Hand out sessions through a yield dependency that opens a fresh one per request and always closes it.
 
 ## Bad Example
 ```python
@@ -19,16 +19,19 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 engine = create_async_engine(os.environ["DATABASE_URL"])  # created at import time
 session = AsyncSession(engine)  # one session shared by every request
 
+router = APIRouter(prefix="/users")
 
-@router.get("/users/{user_id}")
+
+@router.get("/{user_id}")
 async def read_user(user_id: int) -> UserRead:
     user = await session.get(User, user_id)  # sees other requests' pending changes
     return UserRead.model_validate(user)
 
 
-@router.post("/reports")
-async def create_report() -> None:
-    report_engine = create_async_engine(os.environ["DATABASE_URL"])  # new pool, never disposed
+@router.get("/{user_id}/report")
+async def user_report(user_id: int) -> Response:
+    # a new pool per request, never disposed
+    report_engine = create_async_engine(os.environ["DATABASE_URL"])
     async with AsyncSession(report_engine) as report_session:
         ...
 ```
@@ -36,26 +39,21 @@ async def create_report() -> None:
 ## Good Example
 ```python
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-
-def create_app(settings: Settings) -> FastAPI:
-    @asynccontextmanager
-    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        engine = create_async_engine(settings.database_url.get_secret_value(), pool_pre_ping=True)
-        app.state.sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
-        try:
-            yield
-        finally:
-            await engine.dispose()
-
-    return FastAPI(lifespan=lifespan)
+# inside lifespan (see app-factory-lifespan): one engine per process
+engine = create_async_engine(
+    settings.database_url.get_secret_value(), pool_pre_ping=True
+)
+app.state.sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
+...
+await engine.dispose()  # on shutdown
 
 
+# app/deps.py
 async def get_session(request: Request) -> AsyncIterator[AsyncSession]:
     async with request.app.state.sessionmaker() as session:
         yield session  # closed after the request; uncommitted work is rolled back
@@ -64,7 +62,11 @@ async def get_session(request: Request) -> AsyncIterator[AsyncSession]:
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
-@router.get("/users/{user_id}")
+# app/routers/users.py
+router = APIRouter(prefix="/users")
+
+
+@router.get("/{user_id}")
 async def read_user(user_id: int, session: SessionDep) -> UserRead:
     user = await session.get(User, user_id)
     if user is None:

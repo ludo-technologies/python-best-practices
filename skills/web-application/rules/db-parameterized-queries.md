@@ -1,21 +1,23 @@
 ---
 title: Never Build SQL with String Formatting
 impact: CRITICAL
-impactDescription: Prevents SQL injection, a direct path to reading or destroying the whole database
+impactDescription: SQL injection is impossible by construction
 tags: [database, sql-injection, sqlalchemy, security, text]
 ---
 
 # Never Build SQL with String Formatting [CRITICAL]
 
 ## Description
-SQL text built with f-strings, `%`, `+`, or `.format()` from request data is injectable, including values that look harmless such as IDs, search terms, and sort fields. Wrapping the string in `text()` does not help. Use SQLAlchemy expressions, which always send values as bound parameters, or `text()` with named `:params` for hand-written SQL. Identifiers such as column names and sort directions cannot be bound; map user input onto a fixed whitelist of columns.
+SQL built with f-strings, `%`, `+`, or `.format()` from request data is injectable, even for values that look harmless such as IDs, search terms, and sort fields; wrapping the string in `text()` does not help. Use SQLAlchemy expressions, which always bind values, or `text()` with named `:params` for hand-written SQL. Identifiers such as column names cannot be bound; map user input onto a fixed whitelist of columns.
 
 ## Bad Example
 ```python
 from sqlalchemy import text
 
+router = APIRouter(prefix="/users")
 
-@router.get("/users/search")
+
+@router.get("/search")
 async def search_users(q: str, sort: str, session: SessionDep) -> list[UserRead]:
     result = await session.execute(
         text(f"SELECT id, email FROM users WHERE email LIKE '%{q}%' ORDER BY {sort}")
@@ -31,6 +33,8 @@ from typing import Annotated
 from fastapi import Query
 from sqlalchemy import select, text
 
+router = APIRouter(prefix="/users")
+
 
 class UserSort(StrEnum):
     EMAIL = "email"
@@ -40,7 +44,7 @@ class UserSort(StrEnum):
 SORT_COLUMNS = {UserSort.EMAIL: User.email, UserSort.CREATED: User.created_at}
 
 
-@router.get("/users/search")
+@router.get("/search")
 async def search_users(
     q: Annotated[str, Query(min_length=1, max_length=100)],
     session: SessionDep,
@@ -48,7 +52,7 @@ async def search_users(
 ) -> list[UserRead]:
     stmt = (
         select(User)
-        .where(User.email.icontains(q, autoescape=True))  # bound, and % / _ match literally
+        .where(User.email.icontains(q, autoescape=True))  # bound; % _ literal
         .order_by(SORT_COLUMNS[sort])
         .limit(50)
     )

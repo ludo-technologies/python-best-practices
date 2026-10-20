@@ -1,14 +1,14 @@
 ---
-title: Generate Tokens with secrets and Compare in Constant Time
+title: Generate Tokens with the secrets Module and Compare in Constant Time
 impact: CRITICAL
-impactDescription: Prevents guessable reset links and API keys, plaintext token leaks, and timing attacks on signatures
+impactDescription: Unguessable tokens, no plaintext at rest, no timing leaks
 tags: [security, tokens, secrets, hmac, api-keys]
 ---
 
-# Generate Tokens with secrets and Compare in Constant Time [CRITICAL]
+# Generate Tokens with the secrets Module and Compare in Constant Time [CRITICAL]
 
 ## Description
-Password reset tokens, API keys, invite codes, and webhook secrets must be unpredictable. The `random` module is a Mersenne Twister PRNG whose future output can be reconstructed from observed values; use `secrets`, which reads the operating system's CSPRNG. Store only a hash of each issued token so a database leak does not hand out working credentials, give tokens an expiry, and compare presented secrets with `hmac.compare_digest`, because `==` returns as soon as the first byte differs and leaks how much of a guess was right.
+Reset tokens, API keys, invite codes, and webhook secrets must be unpredictable. `random` is a Mersenne Twister whose future output can be reconstructed from observed values; use `secrets`, which reads the OS CSPRNG. Store only a hash of each issued token, give it an expiry, and compare presented secrets with `hmac.compare_digest`, because `==` returns at the first differing byte and leaks how much of a guess was right.
 
 ## Bad Example
 ```python
@@ -19,8 +19,8 @@ import string
 
 
 def create_reset_token(user: User) -> str:
-    token = "".join(random.choices(string.ascii_letters + string.digits, k=20))  # predictable
-    user.reset_token = token  # stored in plaintext, never expires
+    token = "".join(random.choices(string.ascii_letters + string.digits, k=20))
+    user.reset_token = token  # predictable, stored in plaintext, never expires
     return token
 
 
@@ -49,7 +49,9 @@ def create_reset_token(user: User, now: datetime) -> str:
     return token  # send to the user; never store it
 
 
-async def consume_reset_token(session: AsyncSession, token: str, now: datetime) -> User | None:
+async def consume_reset_token(
+    session: AsyncSession, token: str, now: datetime
+) -> User | None:
     # One atomic UPDATE: concurrent requests with the same token cannot both succeed
     return await session.scalar(
         update(User)

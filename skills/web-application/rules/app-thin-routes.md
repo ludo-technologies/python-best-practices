@@ -1,18 +1,21 @@
 ---
 title: Keep Route Functions Thin and Inject Dependencies with Annotated
 impact: HIGH
-impactDescription: Business logic testable and reusable without HTTP, and endpoints that read as a contract
+impactDescription: Business logic reusable and testable without HTTP
 tags: [app-structure, fastapi, depends, annotated, service-layer]
 ---
 
 # Keep Route Functions Thin and Inject Dependencies with Annotated [HIGH]
 
 ## Description
-A route function is the HTTP adapter: it declares inputs, authentication, and the response model, calls a service function, and converts the result. When token parsing, queries, business rules, external calls, and commits pile up inside the route, the logic cannot be reused from a worker or CLI, tests need the full HTTP stack, and authorization checks are reimplemented inconsistently. Put use-case logic in plain async functions that receive their dependencies (session, clients, the current user's ID, the current time) as parameters, and declare shared dependencies once as `Annotated` aliases.
+A route function is the HTTP adapter: it declares inputs, authentication, and the response model, calls a service function, and converts the result. When token parsing, queries, business rules, external calls, and commits pile up inside the route, the logic cannot be reused from a worker or CLI and tests need the full HTTP stack. Put use-case logic in plain async functions that receive their dependencies as parameters, and declare shared dependencies once as `Annotated` aliases.
 
 ## Bad Example
 ```python
-@router.post("/invoices/{invoice_id}/pay")
+router = APIRouter(prefix="/invoices")
+
+
+@router.post("/{invoice_id}/pay")
 async def pay_invoice(
     invoice_id: int, request: Request, token: str = Depends(oauth2_scheme)
 ) -> dict[str, Any]:
@@ -50,18 +53,28 @@ async def pay_invoice(
     invoice = await get_owned_invoice(session, owner_id=owner_id, invoice_id=invoice_id)
     if invoice.paid_at is not None:
         raise ConflictError("Invoice already paid")
-    await charge(payments, invoice.id, invoice.total_cents, idempotency_key=f"invoice-{invoice.id}")
+    await charge(
+        payments,
+        invoice.id,
+        invoice.total_cents,
+        idempotency_key=f"invoice-{invoice.id}",
+    )
     invoice.paid_at = now
     await session.commit()
     return invoice
 
 
 # app/routers/invoices.py: HTTP adapter only
+router = APIRouter(prefix="/invoices", dependencies=[Depends(get_current_user)])
+
+
 @router.post("/{invoice_id}/pay")
 async def pay(
     invoice_id: int, user: CurrentUser, session: SessionDep, payments: PaymentsClientDep
 ) -> InvoiceRead:
-    invoice = await pay_invoice(session, payments, user.id, invoice_id, now=datetime.now(UTC))
+    invoice = await pay_invoice(
+        session, payments, user.id, invoice_id, now=datetime.now(UTC)
+    )
     return InvoiceRead.model_validate(invoice)
 ```
 

@@ -1,14 +1,14 @@
 ---
 title: Never Block the Event Loop in async def Endpoints
 impact: CRITICAL
-impactDescription: One blocking call stalls every concurrent request on the worker, not only its own
+impactDescription: One blocking call no longer stalls every request on the worker
 tags: [async, fastapi, event-loop, threadpool, performance]
 ---
 
 # Never Block the Event Loop in async def Endpoints [CRITICAL]
 
 ## Description
-FastAPI runs `async def` endpoints directly on the event loop. A blocking call inside one, such as `requests.get`, `time.sleep`, a sync database driver or `Session`, or CPU-heavy work like password hashing or PDF rendering, freezes the loop: every other request on that worker waits, health checks time out, and latency spikes appear under light load. Inside `async def`, use awaitable libraries only, and move unavoidable blocking or CPU-bound calls to a thread with `asyncio.to_thread`. When an endpoint calls nothing but blocking libraries, declare it with plain `def`; FastAPI runs sync endpoints in a thread pool.
+FastAPI runs `async def` endpoints on the event loop. A blocking call inside one, such as `requests.get`, `time.sleep`, a sync database driver, or CPU-heavy work like password hashing or PDF rendering, freezes the loop: every other request on that worker waits. Inside `async def`, use awaitable libraries only and move unavoidable blocking or CPU-bound calls to a thread with `asyncio.to_thread`. When an endpoint calls nothing but blocking libraries, declare it with plain `def`; FastAPI runs those in a thread pool.
 
 ## Bad Example
 ```python
@@ -16,34 +16,59 @@ import time
 
 import requests
 
+router = APIRouter(prefix="/reports", dependencies=[Depends(get_current_user)])
 
-@router.post("/reports")
-async def create_report(body: ReportRequest, session: SyncSessionDep) -> ReportRead:
-    sales = session.scalars(select(Sale).where(Sale.month == body.month)).all()  # sync DB I/O
-    rates = requests.get("https://fx.example.com/rates", timeout=5).json()  # blocks the loop
+
+@router.post("")
+async def create_report(month: str, user: CurrentUser, session: SessionDep) -> Response:
+    invoices = list(
+        await session.scalars(select(Invoice).where(Invoice.owner_id == user.id))
+    )
+    rates = requests.get(
+        "https://fx.example.com/rates", timeout=5
+    ).json()  # blocks the loop
     time.sleep(1)  # pauses every request on this worker, not just this one
-    pdf = render_pdf(sales, rates)  # seconds of CPU on the event loop
-    return ReportRead(size=len(pdf))
+    pdf = render_pdf(invoices, rates)  # seconds of CPU on the event loop
+    return Response(pdf, media_type="application/pdf")
 ```
 
 ## Good Example
 ```python
 import asyncio
+from pathlib import Path
+
+from fastapi import Response
+
+router = APIRouter(prefix="/reports", dependencies=[Depends(get_current_user)])
+ARCHIVE_DIR = Path("/var/reports")
 
 
-@router.post("/reports")
-async def create_report(body: ReportRequest, session: SessionDep, fx: FxClientDep) -> ReportRead:
-    sales = list(await session.scalars(select(Sale).where(Sale.month == body.month)))
-    response = await fx.get("/rates")  # shared httpx.AsyncClient, see async-shared-http-client
+def render_pdf(
+    invoices: list[Invoice], rates: dict[str, float]
+) -> bytes: ...  # pure CPU work that takes seconds
+
+
+@router.post("")
+async def create_report(
+    month: str, user: CurrentUser, session: SessionDep, payments: PaymentsClientDep
+) -> Response:
+    invoices = list(
+        await session.scalars(select(Invoice).where(Invoice.owner_id == user.id))
+    )
+    response = await payments.get("/fx-rates")  # shared httpx.AsyncClient
     response.raise_for_status()
-    pdf = await asyncio.to_thread(render_pdf, sales, response.json())  # CPU work off the loop
-    return ReportRead(size=len(pdf))
+    # CPU work off the event loop
+    pdf = await asyncio.to_thread(render_pdf, invoices, response.json())
+    return Response(pdf, media_type="application/pdf")
 
 
 # Only blocking calls inside: plain def runs in FastAPI's thread pool
-@router.get("/archive/{report_id}")
-def read_archived_report(report_id: int, archive: ArchiveClientDep) -> ReportRead:
-    return archive.fetch(report_id)  # blocking SDK call is fine here
+@router.get("/{report_id}/archive")
+def read_archived_report(report_id: int) -> Response:
+    pdf = (
+        ARCHIVE_DIR / f"{report_id}.pdf"
+    ).read_bytes()  # blocking file I/O is fine here
+    return Response(pdf, media_type="application/pdf")
 ```
 
 ## Notes
