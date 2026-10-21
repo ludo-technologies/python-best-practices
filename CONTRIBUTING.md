@@ -26,7 +26,11 @@ skills/
 │   ├── SKILL.md
 │   ├── metadata.json
 │   └── rules/
-└── data-science/              # NumPy and pandas best practices
+├── data-science/              # NumPy and pandas best practices
+│   ├── SKILL.md
+│   ├── metadata.json
+│   └── rules/
+└── web-application/           # FastAPI web application best practices
     ├── SKILL.md
     ├── metadata.json
     └── rules/
@@ -42,6 +46,7 @@ skills/
 | tooling | `analysis-`, `lint-`, `type-`, `fmt-`, `test-`, `pkg-` |
 | testing | `struct-`, `fixture-`, `param-`, `mock-` |
 | data-science | `vec-`, `mut-`, `dtype-`, `schema-`, `repro-`, `style-`, `type-`, `test-` |
+| web-application | `sec-`, `db-`, `async-`, `api-`, `config-`, `app-`, `obs-`, `test-` |
 
 ### 2. Create the rule file
 
